@@ -10,7 +10,9 @@ This baseline establishes the product and architecture before implementation beg
 - [Layered analysis architecture](architecture/layered-analysis-model.md)
 - [Profiles and composition](architecture/profiles-and-composition.md)
 - [Evidence before judgment](decisions/ADR-001-evidence-before-judgment.md)
+- [Protected master and pull-request governance](decisions/ADR-002-protected-master-and-pr-governance.md)
 - [Repository state model](specifications/repository-state-model.md)
+- [Evidence and provenance](specifications/evidence-and-provenance.md)
 - [State-awareness-first roadmap](roadmap/state-awareness-first.md)
 
 ## Controlling principles

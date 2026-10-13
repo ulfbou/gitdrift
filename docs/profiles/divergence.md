@@ -41,7 +41,7 @@ Simplified history may support navigation or candidate selection. It may not sil
 
 ## Alternate-chain analysis
 
-Alternate chains are compared from declared or mechanically selected common ancestry under `alternate-chain-correspondence.md`. Commit correspondence, patch equivalence, artifact correspondence, and semantic correspondence remain separate claims with separate evidence and confidence.
+Alternate chains are compared from declared or mechanically selected common ancestry under [alternate-chain correspondence](../specifications/alternate-chain-correspondence.md). Commit correspondence, patch equivalence, artifact correspondence, and semantic correspondence remain separate claims with separate evidence and confidence.
 
 Unmatched commits or transitions remain evidence. They are not automatically valuable, harmful, or irrelevant.
 
@@ -55,7 +55,7 @@ Obligations are evaluated independently at the controlling and candidate states.
 
 A candidate gold nugget is a semantically relevant fact present in a candidate state, absent from the controlling state, and not already represented there equivalently or more strongly.
 
-The profile classifies candidates according to `gold-nugget-classification.md`. Unique commits, files, or wording are selectors for examination, not proof of a nugget.
+The profile classifies candidates according to [gold-nugget classification](../specifications/gold-nugget-classification.md). Unique commits, files, or wording are selectors for examination, not proof of a nugget.
 
 ## Cases
 

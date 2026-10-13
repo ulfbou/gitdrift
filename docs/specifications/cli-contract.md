@@ -39,7 +39,7 @@ Exact numeric assignments remain an implementation detail until accepted with th
 
 ## Discovery
 
-The CLI exposes machine-readable schema and capability discovery backed by the installed composition. Discovery results follow `capability-discovery.md` and do not advertise planned but unavailable adapters.
+The CLI exposes machine-readable schema and capability discovery backed by the installed composition. Discovery results follow [capability discovery](capability-discovery.md) and do not advertise planned but unavailable adapters.
 
 ## Input manifests
 

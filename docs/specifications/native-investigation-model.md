@@ -56,7 +56,7 @@ Obligations retain identity, subjects, relation, authority, scope, activation, r
 
 ## Cases
 
-Cases follow `case-model.md` and reference shared records by stable identity. A case may embed bounded projection details but must not create conflicting copies of canonical evidence records.
+Cases follow [case model](case-model.md) and reference shared records by stable identity. A case may embed bounded projection details but must not create conflicting copies of canonical evidence records.
 
 ## Completeness
 

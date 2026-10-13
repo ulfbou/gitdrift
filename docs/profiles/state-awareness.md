@@ -55,11 +55,11 @@ upstream <-> INDEX
 upstream <-> WORKTREE
 ```
 
-The profile uses the contract in `state-comparison-matrix.md`. Only actual parent-to-child relationships are ancestry transitions.
+The profile uses the contract in [state comparison matrix](../specifications/state-comparison-matrix.md). Only actual parent-to-child relationships are ancestry transitions.
 
 ## Capture and analysis
 
-Committed states retain commit and tree identities. Provisional states follow `provisional-state-capture.md` and retain manifests, policies, and mutation checks.
+Committed states retain commit and tree identities. Provisional states follow [provisional-state capture](../specifications/provisional-state-capture.md) and retain manifests, policies, and mutation checks.
 
 For each selected comparison, the profile produces raw path changes and exact evidence. Supported extractors may add Markdown sections, Python symbols, tests, or declared facts. Unsupported content remains available as exact evidence and reduces semantic-extraction completeness where applicable.
 

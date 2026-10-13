@@ -16,6 +16,7 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 - [Domain model](architecture/domain-model.md)
 - [Layered analysis model](architecture/layered-analysis-model.md)
 - [Library and adapter boundaries](architecture/library-and-adapter-boundaries.md)
+- [Repository architecture for 0.1](architecture/repository-architecture-0.1.md)
 - [Profiles and composition](architecture/profiles-and-composition.md)
 - [Quality attributes](architecture/quality-attributes.md)
 - [Trust boundaries](architecture/trust-boundaries.md)
@@ -82,6 +83,15 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 
 - [State awareness first](roadmap/state-awareness-first.md)
 
+### Planned Releases
+
+#### Gitdrift 0.1
+
+- [Gitdrift 0.1 Accept ready checklist](releases/0.1/acceptance-checklist.md)
+- [Gitdrift 0.1 Obligation matrix](releases/0.1/obligation-matrix.md)
+- [Gitdrift 0.1 Release Gates](releases/0.1/release-gates.md)
+
+
 ## Controlling principles
 
 1. Gitdrift reports evidence before judgment.
@@ -94,6 +104,7 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 8. The core remains read-only. Export and transport are downstream concerns.
 9. Deterministic, heuristic, AI-assisted, and human-supplied claims remain distinguishable.
 10. External products are analyzed evidence boundaries, not Gitdrift runtime dependencies.
+
 
 ## Status
 

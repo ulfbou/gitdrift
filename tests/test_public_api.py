@@ -13,9 +13,13 @@ class PublicApiTests(unittest.TestCase):
                 "Diagnostic",
                 "DiagnosticSeverity",
                 "ExecutionStatus",
+                "IDENTITY_SCHEME",
+                "Investigation",
                 "NATIVE_SCHEMA_VERSION",
                 "__version__",
                 "discover_capabilities",
+                "stable_id",
+                "validate_reference_closure",
             },
         )
 

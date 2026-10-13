@@ -4,15 +4,35 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 
 ## Current documentation baseline
 
-This baseline establishes the product and architecture before implementation begins:
+### Product and architecture
 
 - [Product vision](vision/product-vision.md)
 - [Layered analysis architecture](architecture/layered-analysis-model.md)
 - [Profiles and composition](architecture/profiles-and-composition.md)
+- architecture/domain-model.md
+
+### Decisions
+
 - [Evidence before judgment](decisions/ADR-001-evidence-before-judgment.md)
 - [Protected master and pull-request governance](decisions/ADR-002-protected-master-and-pr-governance.md)
+- decisions/ADR-003-native-json-is-canonical.md
+- decisions/ADR-004-profiles-over-product-forks.md
+
+### Core specifications
+
 - [Repository state model](specifications/repository-state-model.md)
+- specifications/provisional-state-capture.md
+- specifications/transition-and-change-set.md
+- specifications/state-comparison-matrix.md
 - [Evidence and provenance](specifications/evidence-and-provenance.md)
+- specifications/obligation-and-authority.md
+- specifications/case-model.md
+- specifications/native-investigation-model.md
+
+### Profiles and acceptance
+
+- profiles/state-awareness.md
+- acceptance/dx-artifacts-state-awareness.md
 - [State-awareness-first roadmap](roadmap/state-awareness-first.md)
 
 ## Controlling principles
@@ -22,10 +42,12 @@ This baseline establishes the product and architecture before implementation beg
 3. File and concept evolution are first-class; endpoint comparison is only one view.
 4. Semantic regression is distinct from ordinary divergence and overlapping change.
 5. Every derived claim retains provenance, confidence, limitations, and supporting evidence.
-6. Native machine-readable data is canonical; human views are projections of the same evidence.
+6. Native Gitdrift JSON is canonical; human views and interoperability formats are projections.
 7. The core remains read-only. Export and transport are downstream concerns.
 8. Issues, pull requests, milestones, and forge metadata are outside the initial evidence boundary.
+9. Identity is distinct from mutable location, display order, and ref names.
+10. Deterministic, heuristic, AI-assisted, and human-supplied claims remain distinguishable.
 
 ## Status
 
-These documents are an inception baseline. They define vocabulary, boundaries, and the first vertical slice. They intentionally do not freeze the complete CLI, plugin model, forensic algorithms, or DX evidence-export contract.
+The current contracts define the semantic kernel and the state-awareness profile. They intentionally do not freeze the complete CLI, plugin model, divergence algorithms, forensic inference, or DX evidence-export contract.

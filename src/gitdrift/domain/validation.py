@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import fields, is_dataclass
 from typing import Any
 
-from .records import Investigation
+from .investigation import Investigation
 
 
 class ReferenceClosureError(ValueError):

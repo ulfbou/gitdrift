@@ -71,6 +71,12 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 - [Transition and change set](specifications/transition-and-change-set.md)
 - [Versioning and compatibility](specifications/versioning-and-compatibility.md)
 
+### Contributor standards
+
+- [Coding standards](contributors/coding-standards.md)
+- [Documentation standards](contributors/documentation-standards.md)
+- [Compatibility and deprecation policy](contributors/compatibility-and-deprecation-policy.md)
+
 ### Acceptance and testing
 
 - [Accretion and fragmentation](acceptance/accretion-and-fragmentation.md)
@@ -91,7 +97,6 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 - [Gitdrift 0.1 Obligation matrix](releases/0.1/obligation-matrix.md)
 - [Gitdrift 0.1 Release Gates](releases/0.1/release-gates.md)
 
-
 ## Controlling principles
 
 1. Gitdrift reports evidence before judgment.
@@ -104,7 +109,6 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 8. The core remains read-only. Export and transport are downstream concerns.
 9. Deterministic, heuristic, AI-assisted, and human-supplied claims remain distinguishable.
 10. External products are analyzed evidence boundaries, not Gitdrift runtime dependencies.
-
 
 ## Status
 

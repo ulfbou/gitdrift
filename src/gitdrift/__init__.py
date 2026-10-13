@@ -8,6 +8,7 @@ from .contracts import (
     ExecutionStatus,
 )
 from .discovery import discover_capabilities
+from .domain import IDENTITY_SCHEME, Investigation, stable_id, validate_reference_closure
 from .version import NATIVE_SCHEMA_VERSION, __version__
 
 __all__ = [
@@ -16,7 +17,11 @@ __all__ = [
     "Diagnostic",
     "DiagnosticSeverity",
     "ExecutionStatus",
+    "IDENTITY_SCHEME",
+    "Investigation",
     "NATIVE_SCHEMA_VERSION",
     "__version__",
     "discover_capabilities",
+    "stable_id",
+    "validate_reference_closure",
 ]

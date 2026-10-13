@@ -85,6 +85,7 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 - [Dx.domain divergence](acceptance/dx-domain-divergence.md)
 - [File history regression](acceptance/file-history-regression.md)
 - [Acceptance strategy](testing/acceptance-strategy.md)
+- [Working-tree capture test plan](testing/working-tree-capture-test-plan.md)
 
 ### Roadmap
 

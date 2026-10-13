@@ -10,6 +10,7 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 - [Layered analysis architecture](architecture/layered-analysis-model.md)
 - [Profiles and composition](architecture/profiles-and-composition.md)
 - architecture/domain-model.md
+- architecture/library-and-adapter-boundaries.md
 
 ### Decisions
 
@@ -17,6 +18,8 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 - [Protected master and pull-request governance](decisions/ADR-002-protected-master-and-pr-governance.md)
 - decisions/ADR-003-native-json-is-canonical.md
 - decisions/ADR-004-profiles-over-product-forks.md
+- decisions/ADR-005-library-core-and-thin-cli.md
+- decisions/ADR-006-external-products-are-evidence-boundaries.md
 
 ### Core specifications
 
@@ -28,6 +31,9 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 - specifications/obligation-and-authority.md
 - specifications/case-model.md
 - specifications/native-investigation-model.md
+- specifications/capability-discovery.md
+- specifications/library-api.md
+- specifications/cli-contract.md
 
 ### Profiles and acceptance
 
@@ -47,7 +53,9 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 8. Issues, pull requests, milestones, and forge metadata are outside the initial evidence boundary.
 9. Identity is distinct from mutable location, display order, and ref names.
 10. Deterministic, heuristic, AI-assisted, and human-supplied claims remain distinguishable.
+11. The Python library owns product semantics; the CLI is a replaceable adapter.
+12. External products are analyzed evidence boundaries, not Gitdrift runtime dependencies.
 
 ## Status
 
-The current contracts define the semantic kernel and the state-awareness profile. They intentionally do not freeze the complete CLI, plugin model, divergence algorithms, forensic inference, or DX evidence-export contract.
+The current contracts define the semantic kernel, state-awareness profile, native investigation boundary, and initial library-to-adapter separation. They intentionally do not freeze divergence algorithms, forensic inference, plugin SDKs, hosted integrations, or DX evidence export.

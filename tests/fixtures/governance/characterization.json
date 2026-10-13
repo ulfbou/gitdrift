@@ -1,0 +1,28 @@
+{
+  "canonical_check_candidates": [
+    {
+      "name": "validate",
+      "observations": [
+        {
+          "candidate_kind": "head",
+          "pull_request": 7,
+          "sha": "c6ff1e66a113c28341c015df338528a5d81ec88b",
+          "check": {
+            "id": 115278061085,
+            "name": "validate",
+            "head_sha": "c6ff1e66a113c28341c015df338528a5d81ec88b",
+            "status": "completed",
+            "conclusion": "success",
+            "app": {
+              "id": 15368,
+              "slug": "github-actions",
+              "name": "GitHub Actions",
+              "owner_login": "github"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "same_name_commit_status_conflicts": []
+}

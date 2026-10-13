@@ -75,6 +75,7 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 
 - [Coding standards](contributors/coding-standards.md)
 - [Documentation standards](contributors/documentation-standards.md)
+- [Hosted integration validation](contributors/hosted-integration-validation.md)
 - [Compatibility and deprecation policy](contributors/compatibility-and-deprecation-policy.md)
 
 ### Acceptance and testing

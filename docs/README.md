@@ -89,6 +89,8 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 ### Roadmap
 
 - [State awareness first](roadmap/state-awareness-first.md)
+- [Acceptance gap audit](roadmap/acceptance-gap-audit.md)
+- [Next repository objective: reproducible index capture](roadmap/next-repository-objective.md)
 
 ### Planned Releases
 

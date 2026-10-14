@@ -1,4 +1,9 @@
 """Domain-owned ports."""
+from .cases import (
+    CaseBuilder,
+    CaseConstructionRequest,
+    CaseConstructionResult,
+)
 from .extraction import (
     ArtifactKind,
     ExtractedFragment,
@@ -36,6 +41,9 @@ from .repository import (
     WorkingTreeEvidence,
 )
 __all__ = [
+    "CaseConstructionResult",
+    "CaseConstructionRequest",
+    "CaseBuilder",
     "ArtifactKind",
     "DiffOptions",
     "ExtractedFragment",

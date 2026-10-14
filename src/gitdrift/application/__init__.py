@@ -1,4 +1,8 @@
 """Application use cases."""
+from .cases import (
+    DeterministicCaseBuilder,
+    build_case,
+)
 
 from .capture import (
     capture_head,
@@ -18,6 +22,8 @@ from .comparison import (
 )
 
 __all__ = [
+    "build_case",
+    "DeterministicCaseBuilder",
     "ComparisonMatrixExecution",
     "DeterministicObligationEvaluator",
     "ComparisonMatrixRequest",

@@ -1,0 +1,18 @@
+{
+  "policy_id": "gitdrift-python-module-maintainability-v1",
+  "limits": {
+    "implementation": {
+      "maximum_bytes": 65536,
+      "maximum_lines": 800
+    },
+    "repository-tooling": {
+      "maximum_bytes": 65536,
+      "maximum_lines": 800
+    },
+    "test": {
+      "maximum_bytes": 98304,
+      "maximum_lines": 1200
+    }
+  },
+  "exceptions": []
+}

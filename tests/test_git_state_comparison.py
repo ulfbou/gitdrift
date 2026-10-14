@@ -230,6 +230,128 @@ class GitStateComparisonTests(unittest.TestCase):
             minimal.changes[0].id,
         )
 
+    def test_head_and_upstream_reports_ancestor_reachability(
+        self,
+    ) -> None:
+        temporary, root = repository()
+        self.addCleanup(temporary.cleanup)
+
+        git(root, "branch", "upstream")
+        git(root, "config", "branch.master.remote", ".")
+        git(
+            root,
+            "config",
+            "branch.master.merge",
+            "refs/heads/upstream",
+        )
+
+        git(root, "checkout", "-q", "upstream")
+        (root / "upstream.txt").write_bytes(b"upstream\n")
+        git(root, "add", "upstream.txt")
+        git(root, "commit", "-qm", "upstream")
+        git(root, "checkout", "-q", "master")
+
+        before = snapshot(root)
+        comparator = GitStateComparator(root)
+        first = comparator.compare_head_and_upstream()
+        second = comparator.compare_head_and_upstream()
+
+        self.assertEqual(snapshot(root), before)
+        self.assertEqual(first, second)
+        self.assertEqual(
+            first.comparison.kind,
+            "head-and-upstream",
+        )
+        self.assertFalse(
+            first.comparison.ancestry_established
+        )
+        self.assertEqual(
+            first.reachability,
+            "head-ancestor-of-upstream",
+        )
+        self.assertEqual(len(first.changes), 1)
+        self.assertEqual(
+            first.changes[0].destination_path,
+            "upstream.txt",
+        )
+
+    def test_head_and_upstream_reports_equal_reachability(
+        self,
+    ) -> None:
+        temporary, root = repository()
+        self.addCleanup(temporary.cleanup)
+
+        git(root, "branch", "upstream")
+        git(root, "config", "branch.master.remote", ".")
+        git(
+            root,
+            "config",
+            "branch.master.merge",
+            "refs/heads/upstream",
+        )
+
+        result = (
+            GitStateComparator(root)
+            .compare_head_and_upstream()
+        )
+
+        self.assertEqual(result.reachability, "equal")
+        self.assertEqual(result.changes, ())
+
+    def test_head_and_upstream_reports_divergence(
+        self,
+    ) -> None:
+        temporary, root = repository()
+        self.addCleanup(temporary.cleanup)
+
+        git(root, "branch", "upstream")
+        git(root, "config", "branch.master.remote", ".")
+        git(
+            root,
+            "config",
+            "branch.master.merge",
+            "refs/heads/upstream",
+        )
+
+        git(root, "checkout", "-q", "upstream")
+        (root / "upstream.txt").write_bytes(b"upstream\n")
+        git(root, "add", "upstream.txt")
+        git(root, "commit", "-qm", "upstream")
+
+        git(root, "checkout", "-q", "master")
+        (root / "local.txt").write_bytes(b"local\n")
+        git(root, "add", "local.txt")
+        git(root, "commit", "-qm", "local")
+
+        result = (
+            GitStateComparator(root)
+            .compare_head_and_upstream()
+        )
+
+        self.assertEqual(result.reachability, "divergent")
+        self.assertFalse(
+            result.comparison.ancestry_established
+        )
+        self.assertEqual(
+            {
+                change.source_path or change.destination_path
+                for change in result.changes
+            },
+            {"local.txt", "upstream.txt"},
+        )
+
+    def test_head_and_upstream_requires_configured_upstream(
+        self,
+    ) -> None:
+        temporary, root = repository()
+        self.addCleanup(temporary.cleanup)
+
+        with self.assertRaisesRegex(
+            Exception,
+            "configured upstream is unavailable",
+        ):
+            GitStateComparator(root).compare_head_and_upstream()
+
     def test_unsafe_pathspec_is_rejected(self) -> None:
         with self.assertRaisesRegex(
             ValueError,

@@ -11,11 +11,13 @@ from typing import Callable
 from gitdrift.application import (
     capture_head,
     capture_index,
+    capture_upstream,
     capture_working_tree,
 )
 from gitdrift.domain import Comparison, RawChange
 from gitdrift.ports import (
     DiffOptions,
+    Reachability,
     StateComparisonResult,
 )
 
@@ -329,6 +331,60 @@ class GitStateComparator:
         state = capture_working_tree(self._reader)
         return _Endpoint(state.id, state.content_identity)
 
+    def _upstream(self) -> _Endpoint:
+        state = capture_upstream(self._reader)
+        if state is None:
+            raise GitRepositoryError(
+                "configured upstream is unavailable"
+            )
+        return _Endpoint(state.id, state.content_identity)
+
+    def _is_ancestor(
+        self,
+        ancestor: str,
+        descendant: str,
+    ) -> bool:
+        result = subprocess.run(
+            [
+                "git",
+                "-c",
+                "core.hooksPath=/dev/null",
+                "merge-base",
+                "--is-ancestor",
+                ancestor,
+                descendant,
+            ],
+            cwd=self._root,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        if result.returncode == 0:
+            return True
+        if result.returncode == 1:
+            return False
+        detail = result.stderr.decode(
+            "utf-8",
+            errors="replace",
+        ).strip()
+        raise GitRepositoryError(
+            detail or "Git reachability query failed"
+        )
+
+    def _reachability(
+        self,
+        head_commit: str,
+        upstream_commit: str,
+    ) -> Reachability:
+        if head_commit == upstream_commit:
+            return Reachability.EQUAL
+        if self._is_ancestor(head_commit, upstream_commit):
+            return Reachability.HEAD_ANCESTOR_OF_UPSTREAM
+        if self._is_ancestor(upstream_commit, head_commit):
+            return Reachability.UPSTREAM_ANCESTOR_OF_HEAD
+        return Reachability.DIVERGENT
+
     def compare_head_to_index(
         self,
         *,
@@ -376,4 +432,54 @@ class GitStateComparator:
             left=self._head,
             right=self._working_tree,
             options=options,
+        )
+
+    def compare_head_and_upstream(
+        self,
+        *,
+        options: DiffOptions = DiffOptions(),
+    ) -> StateComparisonResult:
+        head_before = self._reader.capture_head()
+        upstream_before = self._reader.capture_upstream()
+        if upstream_before is None:
+            raise GitRepositoryError(
+                "configured upstream is unavailable"
+            )
+
+        executed = self._execute(
+            kind="head-and-upstream",
+            question=(
+                "How do captured HEAD and upstream states relate?"
+            ),
+            command=(
+                "diff",
+                head_before.commit_id,
+                upstream_before.commit_id,
+            ),
+            left=self._head,
+            right=self._upstream,
+            options=options,
+        )
+
+        head_after = self._reader.capture_head()
+        upstream_after = self._reader.capture_upstream()
+        if upstream_after is None:
+            raise GitRepositoryError(
+                "configured upstream became unavailable"
+            )
+        if (
+            head_before != head_after
+            or upstream_before != upstream_after
+        ):
+            raise GitRepositoryError(
+                "HEAD or upstream changed during comparison"
+            )
+
+        return StateComparisonResult(
+            comparison=executed.comparison,
+            changes=executed.changes,
+            reachability=self._reachability(
+                head_before.commit_id,
+                upstream_before.commit_id,
+            ),
         )

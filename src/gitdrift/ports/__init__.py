@@ -16,6 +16,13 @@ from .comparison import (
     StateComparator,
     StateComparisonResult,
 )
+from .obligations import (
+    ObligationEvaluationRequest,
+    ObligationEvaluationResult,
+    ObligationEvaluator,
+    ObligationSet,
+    ObligationSetLoader,
+)
 from .repository import (
     HeadEvidence,
     IgnoredPolicy,
@@ -40,6 +47,11 @@ __all__ = [
     "ExtractorDeterminism",
     "FactExtractor",
     "HeadEvidence",
+    "ObligationEvaluationRequest",
+    "ObligationEvaluationResult",
+    "ObligationEvaluator",
+    "ObligationSet",
+    "ObligationSetLoader",
     "IgnoredPolicy",
     "IndexEntry",
     "IndexEvidence",

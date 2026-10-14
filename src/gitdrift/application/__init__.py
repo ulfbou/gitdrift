@@ -6,6 +6,10 @@ from .capture import (
     capture_upstream,
     capture_working_tree,
 )
+from .obligations import (
+    DeterministicObligationEvaluator,
+    evaluate_obligations,
+)
 from .comparison import (
     ComparisonMatrixExecution,
     ComparisonMatrixRequest,
@@ -15,6 +19,7 @@ from .comparison import (
 
 __all__ = [
     "ComparisonMatrixExecution",
+    "DeterministicObligationEvaluator",
     "ComparisonMatrixRequest",
     "ComparisonMatrixResult",
     "capture_head",
@@ -22,4 +27,5 @@ __all__ = [
     "capture_upstream",
     "capture_working_tree",
     "compose_state_comparison_matrix",
+    "evaluate_obligations",
 ]

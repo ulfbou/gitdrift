@@ -1,5 +1,6 @@
 import importlib.util
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -169,37 +170,37 @@ class ValidationScriptTests(unittest.TestCase):
     ) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            validation.subprocess.run(
+            subprocess.run(
                 ["git", "init", "-q"], cwd=root, check=True
             )
-            validation.subprocess.run(
+            subprocess.run(
                 ["git", "config", "user.email", "test@example.com"],
                 cwd=root, check=True,
             )
-            validation.subprocess.run(
+            subprocess.run(
                 ["git", "config", "user.name", "Test"],
                 cwd=root, check=True,
             )
             (root / "base.txt").write_text("base\n", encoding="utf-8")
-            validation.subprocess.run(
+            subprocess.run(
                 ["git", "add", "base.txt"], cwd=root, check=True
             )
-            validation.subprocess.run(
+            subprocess.run(
                 ["git", "commit", "-qm", "base"], cwd=root, check=True
             )
-            base = validation.subprocess.run(
+            base = subprocess.run(
                 ["git", "rev-parse", "HEAD"], cwd=root, check=True,
                 text=True, capture_output=True,
             ).stdout.strip()
             (root / "pr.txt").write_text("pr\n", encoding="utf-8")
-            validation.subprocess.run(
+            subprocess.run(
                 ["git", "add", "pr.txt"], cwd=root, check=True
             )
-            validation.subprocess.run(
+            subprocess.run(
                 ["git", "commit", "-qm", "pr"], cwd=root, check=True
             )
             (root / "staged.txt").write_text("staged\n", encoding="utf-8")
-            validation.subprocess.run(
+            subprocess.run(
                 ["git", "add", "staged.txt"], cwd=root, check=True
             )
             (root / "base.txt").write_text("changed\n", encoding="utf-8")
@@ -307,17 +308,17 @@ class ValidationScriptTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             for args in (("init", "-q"), ("config", "user.email", "test@example.com"), ("config", "user.name", "Test")):
-                validation.subprocess.run(["git", *args], cwd=root, check=True)
+                subprocess.run(["git", *args], cwd=root, check=True)
             (root / "removed.txt").write_text("content\n", encoding="utf-8")
-            validation.subprocess.run(["git", "add", "removed.txt"], cwd=root, check=True)
-            validation.subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
-            base = validation.subprocess.run(
+            subprocess.run(["git", "add", "removed.txt"], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            base = subprocess.run(
                 ["git", "rev-parse", "HEAD"], cwd=root, check=True,
                 text=True, capture_output=True,
             ).stdout.strip()
             (root / "removed.txt").unlink()
-            validation.subprocess.run(["git", "add", "-u"], cwd=root, check=True)
-            validation.subprocess.run(["git", "commit", "-qm", "delete"], cwd=root, check=True)
+            subprocess.run(["git", "add", "-u"], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "delete"], cwd=root, check=True)
             scope = validation.changed_paths(
                 root, base_ref=base, include_staged=False, include_unstaged=False
             )
@@ -329,19 +330,19 @@ class ValidationScriptTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             for args in (("init", "-q"), ("config", "user.email", "test@example.com"), ("config", "user.name", "Test")):
-                validation.subprocess.run(["git", *args], cwd=root, check=True)
+                subprocess.run(["git", *args], cwd=root, check=True)
             (root / "tracked.txt").write_text("base\n", encoding="utf-8")
-            validation.subprocess.run(["git", "add", "tracked.txt"], cwd=root, check=True)
-            validation.subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
-            base = validation.subprocess.run(
+            subprocess.run(["git", "add", "tracked.txt"], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            base = subprocess.run(
                 ["git", "rev-parse", "HEAD"], cwd=root, check=True,
                 text=True, capture_output=True,
             ).stdout.strip()
             (root / "committed.txt").write_text("committed\n", encoding="utf-8")
-            validation.subprocess.run(["git", "add", "committed.txt"], cwd=root, check=True)
-            validation.subprocess.run(["git", "commit", "-qm", "candidate"], cwd=root, check=True)
+            subprocess.run(["git", "add", "committed.txt"], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "candidate"], cwd=root, check=True)
             (root / "staged.txt").write_text("staged\n", encoding="utf-8")
-            validation.subprocess.run(["git", "add", "staged.txt"], cwd=root, check=True)
+            subprocess.run(["git", "add", "staged.txt"], cwd=root, check=True)
             (root / "tracked.txt").write_text("unstaged\n", encoding="utf-8")
             (root / "untracked.txt").write_text("untracked\n", encoding="utf-8")
 
@@ -356,15 +357,15 @@ class ValidationScriptTests(unittest.TestCase):
     def test_validation_pass_and_failure_paths_preserve_candidate_bytes_and_git_state(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            validation.subprocess.run(["git", "init", "-q"], cwd=root, check=True)
-            validation.subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=root, check=True)
-            validation.subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
             candidate = root / "candidate.bin"
             candidate.write_bytes(b"\x00candidate\r\n")
-            validation.subprocess.run(["git", "add", "candidate.bin"], cwd=root, check=True)
-            validation.subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            subprocess.run(["git", "add", "candidate.bin"], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
             candidate.write_bytes(b"\xffchanged\r\n")
-            index_path = Path(validation.subprocess.run(
+            index_path = Path(subprocess.run(
                 ["git", "rev-parse", "--git-path", "index"], cwd=root, check=True,
                 text=True, capture_output=True,
             ).stdout.strip())
@@ -373,9 +374,9 @@ class ValidationScriptTests(unittest.TestCase):
 
             def snapshot():
                 return (
-                    validation.subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, check=True, text=True, capture_output=True).stdout,
+                    subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, check=True, text=True, capture_output=True).stdout,
                     index_path.read_bytes(),
-                    validation.subprocess.run(["git", "status", "--porcelain=v1", "-z"], cwd=root, check=True, stdout=validation.subprocess.PIPE).stdout,
+                    subprocess.run(["git", "status", "--porcelain=v1", "-z"], cwd=root, check=True, stdout=subprocess.PIPE).stdout,
                     candidate.read_bytes(),
                 )
 

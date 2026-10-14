@@ -76,6 +76,7 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 - [Coding standards](contributors/coding-standards.md)
 - [Documentation standards](contributors/documentation-standards.md)
 - [Hosted integration validation](contributors/hosted-integration-validation.md)
+- [Python module maintainability](contributors/module-maintainability.md)
 - [Compatibility and deprecation policy](contributors/compatibility-and-deprecation-policy.md)
 
 ### Acceptance and testing
@@ -91,7 +92,7 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 
 - [State awareness first](roadmap/state-awareness-first.md)
 - [Acceptance gap audit](roadmap/acceptance-gap-audit.md)
-- [Next repository objective: reproducible index capture](roadmap/next-repository-objective.md)
+- [Next repository objective: reproducible working-tree capture](roadmap/next-repository-objective.md)
 
 ### Planned Releases
 

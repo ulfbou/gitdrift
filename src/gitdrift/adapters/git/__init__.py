@@ -1,4 +1,5 @@
 """Git adapter exports."""
+from .comparison import GitStateComparator
 from .repository import (
     GitRepositoryError,
     GitRepositoryReader,
@@ -7,6 +8,7 @@ from .repository import (
 )
 
 __all__ = [
+    "GitStateComparator",
     "GitRepositoryError",
     "GitRepositoryReader",
     "IndexChangedError",

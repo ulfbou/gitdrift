@@ -1,4 +1,14 @@
 """Domain-owned ports."""
+from .native import (
+    ByteSink,
+    NATIVE_SCHEMA_ID,
+    NATIVE_SCHEMA_VERSION,
+    NativeArtifact,
+    NativeContractError,
+    NativeInvestigationSerializer,
+    NativeValidationError,
+    OutputSinkError,
+)
 from .cases import (
     CaseBuilder,
     CaseConstructionRequest,
@@ -41,6 +51,14 @@ from .repository import (
     WorkingTreeEvidence,
 )
 __all__ = [
+    "OutputSinkError",
+    "NativeValidationError",
+    "NativeInvestigationSerializer",
+    "NativeContractError",
+    "NativeArtifact",
+    "NATIVE_SCHEMA_VERSION",
+    "NATIVE_SCHEMA_ID",
+    "ByteSink",
     "CaseConstructionResult",
     "CaseConstructionRequest",
     "CaseBuilder",

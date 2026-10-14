@@ -1,4 +1,8 @@
 """Application use cases."""
+from .native import (
+    NativeDeliveryResult,
+    serialize_and_deliver,
+)
 from .cases import (
     DeterministicCaseBuilder,
     build_case,
@@ -22,6 +26,8 @@ from .comparison import (
 )
 
 __all__ = [
+    "serialize_and_deliver",
+    "NativeDeliveryResult",
     "build_case",
     "DeterministicCaseBuilder",
     "ComparisonMatrixExecution",

@@ -1,0 +1,126 @@
+{
+  "$id": "https://gitdrift.dev/schemas/investigation/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "items": {
+        "$ref": "#/$defs/identifiedRecord"
+      },
+      "type": "array"
+    },
+    "changes": {
+      "items": {
+        "$ref": "#/$defs/identifiedRecord"
+      },
+      "type": "array"
+    },
+    "comparisons": {
+      "items": {
+        "$ref": "#/$defs/identifiedRecord"
+      },
+      "type": "array"
+    },
+    "completeness": {
+      "type": "object"
+    },
+    "diagnostics": {
+      "items": {
+        "additionalProperties": true,
+        "required": [
+          "code",
+          "severity",
+          "category",
+          "affected_ids",
+          "completeness_effects"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "evaluations": {
+      "items": {
+        "$ref": "#/$defs/identifiedRecord"
+      },
+      "type": "array"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/identifiedRecord"
+      },
+      "type": "array"
+    },
+    "facts": {
+      "items": {
+        "$ref": "#/$defs/identifiedRecord"
+      },
+      "type": "array"
+    },
+    "investigation_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "manifest": {
+      "type": "object"
+    },
+    "obligations": {
+      "items": {
+        "$ref": "#/$defs/identifiedRecord"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "const": "https://gitdrift.dev/schemas/investigation/v1"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "snapshots": {
+      "items": {
+        "$ref": "#/$defs/identifiedRecord"
+      },
+      "type": "array"
+    },
+    "states": {
+      "items": {
+        "$ref": "#/$defs/identifiedRecord"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema",
+    "schema_version",
+    "investigation_id",
+    "manifest",
+    "states",
+    "comparisons",
+    "snapshots",
+    "changes",
+    "evidence",
+    "facts",
+    "obligations",
+    "evaluations",
+    "cases",
+    "diagnostics",
+    "completeness"
+  ],
+  "title": "Gitdrift native investigation",
+  "type": "object",
+  "x-gitdrift-schema-version": "1.0.0",
+  "$defs": {
+    "identifiedRecord": {
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    }
+  }
+}

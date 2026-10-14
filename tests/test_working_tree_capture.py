@@ -214,7 +214,15 @@ class WorkingTreeCaptureTests(unittest.TestCase):
             entry.kind,
             WorkingTreeEntryKind.SYMLINK,
         )
-        self.assertEqual(entry.symlink_target, str(target))
+        observed_target = os.readlink(link)
+        self.assertEqual(entry.symlink_target, observed_target)
+        self.assertEqual(
+            entry.content_identity,
+            "sha256:"
+            + __import__("hashlib").sha256(
+                os.fsencode(observed_target)
+            ).hexdigest(),
+        )
         self.assertNotEqual(
             entry.content_identity,
             "sha256:"

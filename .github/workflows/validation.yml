@@ -1,28 +1,30 @@
 name: validation
-
 on:
   pull_request:
     branches: [master]
   push:
     branches: [master]
-
 permissions:
   contents: read
-
 jobs:
   validate:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
-
       - name: Install package
         run: python -m pip install --disable-pip-version-check -e .
-
       - name: Run canonical validation
-        run: python scripts/validation/validate.py
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ -n "$BASE_REF" ]; then
+            python scripts/validation/validate.py --base-ref "origin/$BASE_REF"
+          else
+            python scripts/validation/validate.py
+          fi

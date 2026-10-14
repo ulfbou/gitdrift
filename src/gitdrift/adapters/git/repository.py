@@ -14,6 +14,7 @@ from gitdrift.ports import (
     IndexEntry,
     IndexEvidence,
     UntrackedPolicy,
+    UpstreamEvidence,
     WorkingTreeEntry,
     WorkingTreeEntryKind,
     WorkingTreeEvidence,
@@ -196,6 +197,73 @@ class GitRepositoryReader:
             commit,
             tree,
             locator,
+        )
+
+    def capture_upstream(self) -> UpstreamEvidence | None:
+        repository_id, _ = self._repository_context()
+        locator = self._git(
+            "rev-parse",
+            "--abbrev-ref",
+            "--symbolic-full-name",
+            "@{upstream}",
+            allowed=(0, 128),
+        )
+        if not locator:
+            return None
+
+        commit_before = self._git(
+            "rev-parse",
+            "--verify",
+            f"{locator}^{{commit}}",
+            allowed=(0, 128),
+        )
+        tree_before = self._git(
+            "rev-parse",
+            "--verify",
+            f"{locator}^{{tree}}",
+            allowed=(0, 128),
+        )
+        if not commit_before or not tree_before:
+            raise GitRepositoryError(
+                "configured upstream does not resolve to a commit and tree"
+            )
+
+        resolved_locator = self._git(
+            "rev-parse",
+            "--symbolic-full-name",
+            locator,
+            allowed=(0, 128),
+        )
+        if not resolved_locator:
+            raise GitRepositoryError(
+                "configured upstream locator cannot be resolved"
+            )
+
+        commit_after = self._git(
+            "rev-parse",
+            "--verify",
+            f"{resolved_locator}^{{commit}}",
+            allowed=(0, 128),
+        )
+        tree_after = self._git(
+            "rev-parse",
+            "--verify",
+            f"{resolved_locator}^{{tree}}",
+            allowed=(0, 128),
+        )
+        if (
+            commit_before != commit_after
+            or tree_before != tree_after
+        ):
+            raise GitRepositoryError(
+                "configured upstream changed during capture"
+            )
+
+        return UpstreamEvidence(
+            repository_id=repository_id,
+            locator=resolved_locator,
+            commit_id=commit_before,
+            tree_id=tree_before,
         )
 
     def capture_index(self) -> IndexEvidence:

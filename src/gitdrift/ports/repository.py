@@ -35,6 +35,15 @@ class HeadEvidence:
     tree_id: str
     head_locator: str | None
 
+
+@dataclass(frozen=True, slots=True)
+class UpstreamEvidence:
+    repository_id: str
+    locator: str
+    commit_id: str
+    tree_id: str
+
+
 @dataclass(frozen=True, slots=True, order=True)
 class IndexEntry:
     path: str
@@ -85,6 +94,11 @@ class WorkingTreeEvidence:
 class RepositoryReader(Protocol):
     def capture_head(self) -> HeadEvidence:
         """Capture HEAD without mutating repository state."""
+
+    def capture_upstream(
+        self,
+    ) -> UpstreamEvidence | None:
+        """Capture configured upstream without fetch or integration."""
 
     def capture_index(self) -> IndexEvidence:
         """Capture a stable index manifest without mutating repository state."""

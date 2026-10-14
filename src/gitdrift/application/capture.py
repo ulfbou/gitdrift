@@ -16,6 +16,23 @@ def capture_head(reader: RepositoryReader) -> RepositoryState:
         locators=(evidence.head_locator,) if evidence.head_locator else (),
     )
 
+def capture_upstream(
+    reader: RepositoryReader,
+) -> RepositoryState | None:
+    """Capture the configured upstream locator and immutable target."""
+    evidence = reader.capture_upstream()
+    if evidence is None:
+        return None
+    return RepositoryState(
+        kind=StateKind.BRANCH_TIP,
+        repository_id=evidence.repository_id,
+        content_identity=(
+            f"commit:{evidence.commit_id};tree:{evidence.tree_id}"
+        ),
+        locators=(evidence.locator,),
+    )
+
+
 def capture_index(reader: RepositoryReader) -> RepositoryState:
     """Capture a reproducible index manifest through a repository port."""
     evidence = reader.capture_index()

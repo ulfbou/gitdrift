@@ -141,12 +141,57 @@ class ExtractedFragment:
 
 
 @dataclass(frozen=True, slots=True)
+class ExtractedSymbol:
+    """One bounded Python symbol extracted from exact source evidence."""
+    extraction_input_id: str
+    kind: str
+    qualified_name: str
+    name: str
+    parent_qualified_name: str | None
+    start_line: int
+    end_line: int
+    is_async: bool
+    content_identity: str
+    fact_id: str
+    id: str = field(init=False)
+
+    def __post_init__(self) -> None:
+        if self.start_line < 1 or self.end_line < self.start_line:
+            raise ValueError("symbol line range is invalid")
+        if self.kind not in {"class", "function"}:
+            raise ValueError("unsupported Python symbol kind")
+        if not self.name or not self.qualified_name:
+            raise ValueError("Python symbol names must be non-empty")
+        object.__setattr__(
+            self,
+            "id",
+            stable_id(
+                "python-symbol",
+                {
+                    "extraction_input_id": self.extraction_input_id,
+                    "kind": self.kind,
+                    "qualified_name": self.qualified_name,
+                    "name": self.name,
+                    "parent_qualified_name": (
+                        self.parent_qualified_name
+                    ),
+                    "start_line": self.start_line,
+                    "end_line": self.end_line,
+                    "is_async": self.is_async,
+                    "content_identity": self.content_identity,
+                    "fact_id": self.fact_id,
+                },
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class ExtractionResult:
     """Facts and fragments produced from one exact input."""
 
     capability: ExtractorCapability
     extraction_input: ExtractionInput
-    fragments: tuple[ExtractedFragment, ...]
+    fragments: tuple[ExtractedFragment | ExtractedSymbol, ...]
     facts: tuple[Fact, ...]
     diagnostics: tuple[DiagnosticRecord, ...]
     completeness: CompletenessDeclaration

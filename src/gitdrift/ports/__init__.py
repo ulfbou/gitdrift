@@ -1,6 +1,7 @@
 """Domain-owned ports."""
 from .comparison import (
     DiffOptions,
+    Reachability,
     StateComparator,
     StateComparisonResult,
 )
@@ -24,6 +25,7 @@ __all__ = [
     "IndexEntry",
     "IndexEvidence",
     "RepositoryReader",
+    "Reachability",
     "StateComparator",
     "StateComparisonResult",
     "UntrackedPolicy",

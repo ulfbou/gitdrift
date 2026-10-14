@@ -3,9 +3,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any, Mapping, Protocol
 
 from gitdrift.domain import Comparison, RawChange
+
+
+class Reachability(StrEnum):
+    """Established commit-graph relation between captured endpoints."""
+
+    EQUAL = "equal"
+    HEAD_ANCESTOR_OF_UPSTREAM = "head-ancestor-of-upstream"
+    UPSTREAM_ANCESTOR_OF_HEAD = "upstream-ancestor-of-head"
+    DIVERGENT = "divergent"
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,6 +68,7 @@ class StateComparisonResult:
 
     comparison: Comparison
     changes: tuple[RawChange, ...]
+    reachability: Reachability | None = None
 
 
 class StateComparator(Protocol):
@@ -83,3 +94,10 @@ class StateComparator(Protocol):
         options: DiffOptions = DiffOptions(),
     ) -> StateComparisonResult:
         """Compare captured HEAD with the cumulative working tree."""
+
+    def compare_head_and_upstream(
+        self,
+        *,
+        options: DiffOptions = DiffOptions(),
+    ) -> StateComparisonResult:
+        """Compare captured HEAD and upstream with graph reachability."""

@@ -1,6 +1,10 @@
 """Repository-state capture use cases."""
 from gitdrift.domain import RepositoryState, StateKind
-from gitdrift.ports import RepositoryReader
+from gitdrift.ports import (
+    IgnoredPolicy,
+    RepositoryReader,
+    UntrackedPolicy,
+)
 
 def capture_head(reader: RepositoryReader) -> RepositoryState:
     """Capture immutable HEAD commit and tree identity through a repository port."""
@@ -26,6 +30,32 @@ def capture_index(reader: RepositoryReader) -> RepositoryState:
         ).id
     return RepositoryState(
         kind=StateKind.INDEX,
+        repository_id=evidence.repository_id,
+        content_identity=evidence.manifest_identity,
+        base_state_id=base_state_id,
+        limitations=evidence.limitations,
+    )
+
+def capture_working_tree(
+    reader: RepositoryReader,
+    *,
+    untracked_policy: UntrackedPolicy = UntrackedPolicy.EXCLUDE,
+    ignored_policy: IgnoredPolicy = IgnoredPolicy.EXCLUDE,
+    selected_paths: tuple[str, ...] = (),
+) -> RepositoryState:
+    """Capture a reproducible working-tree manifest through a repository port."""
+    evidence = reader.capture_working_tree(
+        untracked_policy=untracked_policy,
+        ignored_policy=ignored_policy,
+        selected_paths=selected_paths,
+    )
+    base_state_id = RepositoryState(
+        kind=StateKind.INDEX,
+        repository_id=evidence.repository_id,
+        content_identity=evidence.index_manifest_identity,
+    ).id
+    return RepositoryState(
+        kind=StateKind.WORKING_TREE,
         repository_id=evidence.repository_id,
         content_identity=evidence.manifest_identity,
         base_state_id=base_state_id,

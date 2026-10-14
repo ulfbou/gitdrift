@@ -18,7 +18,8 @@ No analytical profile is acceptance-ready. Capability discovery must continue to
 
 - Immutable `HEAD` commit and tree capture is implemented as the first bounded part of GD01-001.
 - Repository identity remains local-adapter evidence and requires later compatibility treatment before release closure.
-- Optional upstream capture, index capture, working-tree capture, race detection, and unsupported repository-state handling remain missing.
+- Reproducible index capture is implemented with base identities, complete stage/mode/object entries, deterministic manifests, unmerged-stage preservation, and index-race rejection.
+- Optional upstream capture, working-tree capture, broader race policies, and unsupported repository-state handling remain missing.
 - Full Git-adapter conformance and mutation-sentinel coverage required by G2 and G4 remain missing.
 
 ### Comparisons and exact evidence
@@ -56,4 +57,4 @@ No analytical profile is acceptance-ready. Capability discovery must continue to
 
 ## Sequencing conclusion
 
-The next repository objective is reproducible index capture. It is the smallest missing acquisition capability that unlocks the first mandatory provisional-state comparison while extending the same repository port and read-only adapter established by immutable `HEAD` capture.
+The next repository objective is reproducible working-tree capture. It completes the provisional-state acquisition boundary needed before the required state-comparison matrix can be implemented.

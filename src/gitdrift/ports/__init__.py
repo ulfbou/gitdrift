@@ -1,3 +1,3 @@
 """Domain-owned ports."""
-from .repository import HeadEvidence, RepositoryReader
-__all__ = ["HeadEvidence", "RepositoryReader"]
+from .repository import HeadEvidence, IndexEntry, IndexEvidence, RepositoryReader
+__all__ = ["HeadEvidence", "IndexEntry", "IndexEvidence", "RepositoryReader"]

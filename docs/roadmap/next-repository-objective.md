@@ -1,46 +1,27 @@
-# Next repository objective: reproducible index capture
+# Next repository objective: reproducible working-tree capture
 
 ## Objective
 
-Implement a read-only, reproducible capture of the Git index that satisfies the implementable portion of GD01-003 and creates the evidence boundary required for `HEAD -> INDEX` comparison.
+Implement read-only, reproducible working-tree capture under explicit tracked, untracked, ignored, symlink, deletion, and submodule policies, satisfying the implementable portion of GD01-004 and extending the capture-race boundary established by index acquisition.
 
 ## Scope
 
 The increment must:
 
-1. extend the domain-owned repository port with explicit index acquisition;
-2. capture the base `HEAD` identity when available;
-3. capture every selected index entry with workspace-relative path, stage, mode, and object identity;
-4. preserve unmerged stages rather than collapsing them;
-5. derive a stable index-state manifest and content identity from semantic inputs;
-6. detect relevant index mutation across capture or return an explicit unstable-capture result;
-7. perform no write to refs, index, working tree, configuration, hooks, or repository objects;
-8. provide adapter conformance tests for normal, empty, staged, deleted, mode-changed, and unmerged index states; and
-9. keep the state-awareness profile unavailable after this increment unless all of its required capabilities are composed.
+1. extend the domain-owned repository port with explicit working-tree acquisition;
+2. bind the capture to the captured index and available `HEAD` base identities;
+3. capture exact selected bytes, modes, symlink treatment, deletions, and gitlink status;
+4. implement explicit `exclude`, `include-selected`, and `include-all-visible` untracked policies;
+5. exclude ignored files by default and distinguish any explicit ignored-file inclusion;
+6. derive a deterministic manifest identity from semantic inputs and capture policies;
+7. detect relevant working-tree or index mutation across capture;
+8. perform no write to refs, index, working tree, configuration, hooks, or repository objects; and
+9. keep the state-awareness profile unavailable until comparison, evidence, extraction, obligation, case, and native-output requirements are composed.
 
 ## Exclusions
 
-This objective does not include:
-
-- working-tree capture;
-- untracked or ignored-file policies;
-- state comparison or raw patch construction;
-- semantic extraction;
-- obligation evaluation;
-- case construction;
-- native JSON serialization;
-- new CLI analytical commands; or
-- hosted repository mutation.
+This objective does not include state comparison, raw patches, semantic extraction, obligation evaluation, case construction, native JSON serialization, new analytical CLI commands, or hosted mutation.
 
 ## Acceptance
 
-The increment is complete when:
-
-- index identities are deterministic for identical base, entries, stages, modes, objects, and capture policy;
-- a semantically relevant index change changes the captured identity;
-- unmerged entries retain all observed stages;
-- a capture race cannot be reported as reproducible;
-- before-and-after sentinels prove zero repository mutation;
-- unsupported or unavailable index evidence produces typed failure or partial evidence rather than semantic absence;
-- tests map explicitly to GD01-003, GD01-005, GD01-006, GD01-028, and the applicable G2 checks; and
-- canonical repository validation passes with no capability overclaim.
+The increment is complete when deterministic fixtures prove clean, modified, deleted, untracked, ignored, symlink, mode, submodule, unreadable, unsupported, and capture-race outcomes; before-and-after sentinels prove zero repository mutation; limitations and policy exclusions are explicit; canonical validation passes; and capability discovery does not overclaim profile readiness.

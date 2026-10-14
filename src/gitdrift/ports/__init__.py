@@ -1,4 +1,9 @@
 """Domain-owned ports."""
+from .comparison import (
+    DiffOptions,
+    StateComparator,
+    StateComparisonResult,
+)
 from .repository import (
     HeadEvidence,
     IgnoredPolicy,
@@ -13,11 +18,14 @@ from .repository import (
 )
 
 __all__ = [
+    "DiffOptions",
     "HeadEvidence",
     "IgnoredPolicy",
     "IndexEntry",
     "IndexEvidence",
     "RepositoryReader",
+    "StateComparator",
+    "StateComparisonResult",
     "UntrackedPolicy",
     "UpstreamEvidence",
     "WorkingTreeEntry",

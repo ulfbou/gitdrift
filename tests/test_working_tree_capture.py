@@ -104,6 +104,24 @@ class WorkingTreeCaptureTests(unittest.TestCase):
         )
         self.assertIsNotNone(state.base_state_id)
 
+    def test_application_state_references_exact_captured_index(
+        self,
+    ) -> None:
+        temporary, root = repository()
+        self.addCleanup(temporary.cleanup)
+
+        reader = GitRepositoryReader(root)
+        index_state = __import__(
+            "gitdrift.application",
+            fromlist=["capture_index"],
+        ).capture_index(reader)
+        working_tree_state = capture_working_tree(reader)
+
+        self.assertEqual(
+            working_tree_state.base_state_id,
+            index_state.id,
+        )
+
     def test_modified_binary_and_deleted_content_are_exact(self) -> None:
         temporary, root = repository()
         self.addCleanup(temporary.cleanup)

@@ -10,16 +10,18 @@ def discover_capabilities() -> CapabilityDocument:
         capability_schema_version=CAPABILITY_SCHEMA_VERSION,
         package_version=__version__,
         native_schema_versions=(NATIVE_SCHEMA_VERSION,),
-        available_profiles=(),
-        unavailable_profiles=("state-awareness", "divergence", "file-lineage", "forensics"),
-        available_operations=("capability-discovery",),
-        unavailable_operations=(
+        available_profiles=("state-awareness",),
+        unavailable_profiles=("divergence", "file-lineage", "forensics"),
+        available_operations=(
+            "capability-discovery",
             "repository-acquisition",
             "state-comparison",
+            "native-investigation-serialization",
+        ),
+        unavailable_operations=(
             "semantic-extraction",
             "obligation-evaluation",
             "case-construction",
-            "native-investigation-serialization",
             "ai-assessment",
             "sarif-export",
             "dx-export",
@@ -27,7 +29,10 @@ def discover_capabilities() -> CapabilityDocument:
         ),
         output_formats=("capability-json",),
         limitations=(
-            "Development skeleton only; no analytical profile is executable.",
-            "The declared native schema identity has no investigation schema resource yet.",
+            "State awareness executes repository acquisition, required "
+            "state comparisons, and canonical native serialization.",
+            "Semantic extraction, obligation evaluation, and case "
+            "construction require explicit payload inputs and remain "
+            "unavailable through this profile.",
         ),
     )

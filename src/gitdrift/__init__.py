@@ -9,6 +9,11 @@ from .contracts import (
 )
 from .discovery import discover_capabilities
 from .domain import IDENTITY_SCHEME, Investigation, stable_id, validate_reference_closure
+from .profiles import (
+    StateAwarenessProfile,
+    StateAwarenessRequest,
+    StateAwarenessResult,
+)
 from .version import NATIVE_SCHEMA_VERSION, __version__
 
 __all__ = [
@@ -20,6 +25,9 @@ __all__ = [
     "IDENTITY_SCHEME",
     "Investigation",
     "NATIVE_SCHEMA_VERSION",
+    "StateAwarenessProfile",
+    "StateAwarenessRequest",
+    "StateAwarenessResult",
     "__version__",
     "discover_capabilities",
     "stable_id",

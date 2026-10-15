@@ -17,8 +17,8 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - name: Install package
-        run: python -m pip install --disable-pip-version-check -e .
+      - name: Install package and acceptance tools
+        run: python -m pip install --disable-pip-version-check -e '.[acceptance]'
       - name: Run canonical validation
         env:
           BASE_REF: ${{ github.base_ref }}

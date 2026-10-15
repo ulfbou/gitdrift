@@ -112,6 +112,32 @@ mutation sentinel
 reproduction command or harness identity
 ```
 
+## Installed-distribution acceptance
+
+The installed-distribution boundary builds one wheel and one source
+distribution from the same clean candidate. Each artifact is installed into
+a separate isolated environment and exercised outside the source checkout.
+
+The executable boundary verifies:
+
+- supported public imports;
+- packaged native-schema loading;
+- CLI and library capability-discovery equivalence;
+- truthful available and unavailable capability declarations;
+- independent package and native-schema version domains; and
+- exact candidate and artifact SHA-256 identities.
+
+Run the boundary with:
+
+```bash
+python scripts/acceptance/installed_distribution.py \
+  --output "$OUTPUT_DIR/gitdrift-installed-distribution.json"
+```
+
+The generated evidence is release evidence for the exact candidate. It is not
+a substitute for state-awareness corpus, platform, obligation-closure, or
+final release-gate evidence.
+
 ## Release boundary
 
 A release passes only when applicable domain, conformance, profile, determinism, mutation-safety, compatibility, adversarial, and corpus scenarios pass and their evidence artifacts validate.

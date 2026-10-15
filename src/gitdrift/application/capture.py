@@ -66,10 +66,22 @@ def capture_working_tree(
         ignored_policy=ignored_policy,
         selected_paths=selected_paths,
     )
+    committed_base_state_id = None
+    if evidence.base_commit_id and evidence.base_tree_id:
+        committed_base_state_id = RepositoryState(
+            kind=StateKind.COMMIT,
+            repository_id=evidence.repository_id,
+            content_identity=(
+                f"commit:{evidence.base_commit_id};"
+                f"tree:{evidence.base_tree_id}"
+            ),
+        ).id
+
     base_state_id = RepositoryState(
         kind=StateKind.INDEX,
         repository_id=evidence.repository_id,
         content_identity=evidence.index_manifest_identity,
+        base_state_id=committed_base_state_id,
     ).id
     return RepositoryState(
         kind=StateKind.WORKING_TREE,

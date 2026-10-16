@@ -112,6 +112,30 @@ mutation sentinel
 reproduction command or harness identity
 ```
 
+## Synthetic state-awareness acceptance
+
+The first complete synthetic state-awareness boundary composes the accepted
+repository-state acquisition, required comparison matrix, raw-change evidence,
+native serialization, capability-discovery, determinism, and read-only
+sentinel suites.
+
+Run the boundary against one clean committed candidate with:
+
+```bash
+python scripts/acceptance/state_awareness_synthetic.py \
+  --output "$OUTPUT_DIR/gitdrift-state-awareness-synthetic.json"
+```
+
+The generated evidence identifies the exact candidate commit, executed test
+modules, required scenarios, mapped obligations, release gates, mutation
+sentinel, bounded test-output identity, and aggregate outcome.
+
+This boundary does not satisfy the pinned `dx-artifacts` corpus check,
+cross-platform closure, complete obligation closure, or final release review.
+It does not activate semantic extraction, obligation evaluation, case
+construction, divergence, lineage, forensics, SARIF, DX export, AI assessment,
+or repository mutation through the executable state-awareness profile.
+
 ## Installed-distribution acceptance
 
 The installed-distribution boundary builds one wheel and one source

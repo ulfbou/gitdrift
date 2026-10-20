@@ -89,6 +89,24 @@ class InstalledDistributionAcceptanceTests(unittest.TestCase):
                 checkout=Path("/checkout"),
             )
 
+    def test_verify_probe_resolves_checkout_before_comparison(self):
+        probe = self.probe()
+        checkout = Path("/checkout")
+        probe["module_path"] = str(
+            checkout.resolve()
+            / "src"
+            / "gitdrift"
+            / "__init__.py"
+        )
+        with self.assertRaisesRegex(
+            acceptance.AcceptanceFailure,
+            "source checkout",
+        ):
+            acceptance._verify_probe(
+                probe,
+                checkout=checkout,
+            )
+
     def test_deferred_operation_overclaim_is_rejected(
         self,
     ) -> None:

@@ -145,6 +145,10 @@ class StateAwarenessProfile:
             execution.row
             for execution in composed.executions
             if execution.result is None
+            and not (
+                not request.include_upstream
+                and execution.row.kind.value == "head-and-upstream"
+            )
         )
 
         diagnostics = tuple(
@@ -182,9 +186,13 @@ class StateAwarenessProfile:
                 CompletenessDimension.STATE_CAPTURE: "complete",
                 CompletenessDimension.ARTIFACT_COVERAGE: "complete",
                 CompletenessDimension.SELECTED_REFS: (
-                    "complete"
-                    if not unavailable_rows
-                    else "not-applicable"
+                    "not-requested"
+                    if not request.include_upstream
+                    else (
+                        "complete"
+                        if not unavailable_rows
+                        else "not-applicable"
+                    )
                 ),
                 CompletenessDimension.SEMANTIC_EXTRACTION: (
                     "not-requested"

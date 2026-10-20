@@ -93,6 +93,10 @@ class StateAwarenessProfileTests(unittest.TestCase):
             document["diagnostics"][0]["code"],
             "GD-STATE-COMPARISON-UNAVAILABLE",
         )
+        self.assertEqual(
+            document["completeness"]["values"]["selected-refs"],
+            "not-applicable",
+        )
 
     def test_upstream_completes_all_required_comparisons(
         self,
@@ -124,8 +128,12 @@ class StateAwarenessProfileTests(unittest.TestCase):
         self.assertEqual(len(document["states"]), 4)
         self.assertEqual(len(document["comparisons"]), 4)
         self.assertEqual(document["diagnostics"], [])
+        self.assertEqual(
+            document["completeness"]["values"]["selected-refs"],
+            "complete",
+        )
 
-    def test_explicit_upstream_exclusion_is_truthful(
+    def test_absent_upstream_explicitly_excluded_is_complete(
         self,
     ) -> None:
         temporary, root = repository()
@@ -140,10 +148,51 @@ class StateAwarenessProfileTests(unittest.TestCase):
 
         self.assertEqual(
             result.status,
-            ExecutionStatus.COMPLETED_PARTIAL,
+            ExecutionStatus.COMPLETED,
         )
         document = json.loads(result.artifact.payload)
         self.assertEqual(len(document["states"]), 3)
+        self.assertEqual(len(document["comparisons"]), 3)
+        self.assertEqual(document["diagnostics"], [])
+        self.assertEqual(
+            document["completeness"]["values"]["selected-refs"],
+            "not-requested",
+        )
+
+    def test_available_upstream_explicitly_excluded_is_complete(
+        self,
+    ) -> None:
+        temporary, root = repository()
+        self.addCleanup(temporary.cleanup)
+
+        git(root, "branch", "upstream")
+        git(root, "config", "branch.master.remote", ".")
+        git(
+            root,
+            "config",
+            "branch.master.merge",
+            "refs/heads/upstream",
+        )
+
+        result = StateAwarenessProfile().run(
+            StateAwarenessRequest(
+                root,
+                include_upstream=False,
+            )
+        )
+
+        self.assertEqual(
+            result.status,
+            ExecutionStatus.COMPLETED,
+        )
+        document = json.loads(result.artifact.payload)
+        self.assertEqual(len(document["states"]), 3)
+        self.assertEqual(len(document["comparisons"]), 3)
+        self.assertEqual(document["diagnostics"], [])
+        self.assertEqual(
+            document["completeness"]["values"]["selected-refs"],
+            "not-requested",
+        )
 
     def test_comparison_budget_cannot_silently_truncate_matrix(
         self,

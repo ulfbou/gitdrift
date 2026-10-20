@@ -166,6 +166,7 @@ def _verify_probe(
     checkout: Path,
 ) -> None:
     module_path = Path(probe["module_path"]).resolve()
+    checkout = checkout.resolve()
 
     try:
         module_path.relative_to(checkout)

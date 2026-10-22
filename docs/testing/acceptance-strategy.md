@@ -162,6 +162,17 @@ The generated evidence is release evidence for the exact candidate. It is not
 a substitute for state-awareness corpus, platform, obligation-closure, or
 final release-gate evidence.
 
+## Release-candidate evidence aggregation
+The exact-candidate aggregation boundary executes canonical validation, synthetic state-awareness acceptance, and installed-distribution acceptance against one clean commit. It records content digests for bounded command output, rejects mixed candidate identities, and reports every GD01 obligation and G0 through G8 gate as `pass` or `blocked`. Missing release-wide evidence remains blocked and cannot be promoted to release readiness.
+
+Run the boundary with:
+```bash
+python scripts/acceptance/release_candidate.py \
+  --output "$OUTPUT_DIR/gitdrift-release-candidate.json"
+```
+
+An exit status of `2` means the evidence document was produced successfully but mandatory release closure remains blocked. Exit status `1` means the evidence operation itself failed.
+
 ## Release boundary
 
 A release passes only when applicable domain, conformance, profile, determinism, mutation-safety, compatibility, adversarial, and corpus scenarios pass and their evidence artifacts validate.

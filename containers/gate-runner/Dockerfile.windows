@@ -22,14 +22,12 @@ RUN if ([string]::IsNullOrWhiteSpace($env:MINGIT_URL)) { throw 'MINGIT_URL is re
     if ($actual -ne $env:MINGIT_SHA256.ToLowerInvariant()) { throw "MinGit SHA-256 mismatch: $actual" }; `
     Expand-Archive C:\mingit.zip -DestinationPath C:\Git; `
     Remove-Item C:\mingit.zip; `
-    New-Item -ItemType Directory -Force C:
-unner, C:
-equest, C:\workspace, C:\evidence | Out-Null
+    New-Item -ItemType Directory -Force C:\runner, C:\request, C:\workspace, C:\evidence | Out-Null
 
-ENV PATH="C:\Git\cmd;C:\Gitin;C:\Python;C:\Python\Scripts;C:\Windows\System32;C:\Windows"
+ENV PATH="C:\Git\cmd;C:\Git\bin;C:\Python;C:\Python\Scripts;C:\Windows\System32;C:\Windows"
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH="C:\workspace\src;C:\workspace	ests"
+ENV PYTHONPATH="C:\workspace\src;C:\workspace\tests"
 
 COPY entrypoint.py gates.json C:/runner/
 

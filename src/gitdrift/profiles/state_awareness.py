@@ -36,6 +36,7 @@ _PROFILE_VERSION = "1.0.0"
 _CAPABILITY_ID = "gitdrift-state-awareness-composition-v1"
 _DEFAULT_BUDGETS = {
     "comparisons": 4,
+    "native_output_bytes": 16 * 1024 * 1024,
 }
 
 
@@ -243,6 +244,15 @@ class StateAwarenessProfile:
         artifact = CanonicalNativeJsonSerializer().serialize(
             investigation
         )
+        output_budget = budgets.get("native_output_bytes")
+        if (
+            output_budget is not None
+            and len(artifact.payload) > output_budget
+        ):
+            raise ValueError(
+                "native output exceeds the declared native_output_bytes "
+                "budget; no artifact was delivered"
+            )
 
         return StateAwarenessResult(
             artifact=artifact,

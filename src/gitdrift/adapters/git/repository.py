@@ -8,6 +8,8 @@ import subprocess
 from pathlib import Path
 
 from gitdrift.domain import stable_id
+
+GIT_COMMAND_TIMEOUT_SECONDS = 30
 from gitdrift.ports import (
     HeadEvidence,
     IgnoredPolicy,
@@ -38,14 +40,20 @@ class GitRepositoryReader:
         *arguments: str,
         allowed: tuple[int, ...] = (0,),
     ) -> bytes:
-        completed = subprocess.run(
-            ["git", "-c", "core.hooksPath=/dev/null", *arguments],
-            cwd=self._root,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-        )
+        try:
+            completed = subprocess.run(
+                ["git", "-c", "core.hooksPath=/dev/null", *arguments],
+                cwd=self._root,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=GIT_COMMAND_TIMEOUT_SECONDS,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as error:
+            raise GitRepositoryError(
+                "Git command exceeded the 30-second execution ceiling"
+            ) from error
         if completed.returncode not in allowed:
             detail = completed.stderr.decode(
                 "utf-8",

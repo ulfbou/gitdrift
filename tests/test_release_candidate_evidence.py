@@ -15,6 +15,8 @@ class ReleaseAggregationTests(unittest.TestCase):
             Path("synthetic"),
             Path("installed"),
             Path("corpus"),
+            Path("contract-quality"),
+            Path("resource-bounds"),
             Path("corpus-root"),
         )
         self.assertEqual(
@@ -23,6 +25,8 @@ class ReleaseAggregationTests(unittest.TestCase):
                 "canonical-validation",
                 "synthetic-state-awareness",
                 "installed-distribution",
+                "contract-quality",
+                "resource-bounds",
                 "dx-artifacts-corpus",
             ),
         )
@@ -32,6 +36,8 @@ class ReleaseAggregationTests(unittest.TestCase):
             Path("synthetic"),
             Path("installed"),
             Path("corpus"),
+            Path("contract-quality"),
+            Path("resource-bounds"),
             Path("corpus-root"),
         )[-1]
         self.assertIn(release.CORPUS_COMMIT, specification.arguments)

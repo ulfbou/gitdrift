@@ -10,6 +10,8 @@ from typing import Any
 from release_evidence_contracts import (
     AGGREGATED_GATES,
     CORPUS_OBLIGATIONS,
+    CONTRACT_QUALITY_SCHEMA,
+    RESOURCE_BOUNDS_SCHEMA,
     CORPUS_SCHEMA,
     INSTALLED_OBLIGATIONS,
     INSTALLED_SCHEMA,
@@ -22,7 +24,7 @@ from release_evidence_contracts import (
     ReleaseEvidenceFailure,
 )
 from release_evidence_coverage import coverage_records, is_complete
-from release_evidence_documents import load_evidence
+from release_evidence_documents import load_evidence, validated_pass_claims
 from release_evidence_process import git, run_command
 
 CORPUS_ROOT_ENV = "GITDRIFT_DX_ARTIFACTS_CORPUS_ROOT"
@@ -34,6 +36,8 @@ def _command_specs(
     synthetic_path: Path,
     installed_path: Path,
     corpus_path: Path,
+    contract_quality_path: Path,
+    resource_bounds_path: Path,
     corpus_root: Path,
 ) -> tuple[CommandSpec, ...]:
     return (
@@ -57,6 +61,24 @@ def _command_specs(
                 "scripts/acceptance/installed_distribution.py",
                 "--output",
                 str(installed_path),
+            ),
+        ),
+        CommandSpec(
+            "contract-quality",
+            (
+                sys.executable,
+                "scripts/acceptance/contract_quality.py",
+                "--output",
+                str(contract_quality_path),
+            ),
+        ),
+        CommandSpec(
+            "resource-bounds",
+            (
+                sys.executable,
+                "scripts/acceptance/resource_bounds.py",
+                "--output",
+                str(resource_bounds_path),
             ),
         ),
         CommandSpec(
@@ -86,12 +108,16 @@ def _collect_inputs(
     synthetic_path = evidence_root / "synthetic.json"
     installed_path = evidence_root / "installed.json"
     corpus_path = evidence_root / "corpus.json"
+    contract_quality_path = evidence_root / "contract-quality.json"
+    resource_bounds_path = evidence_root / "resource-bounds.json"
     commands = tuple(
         run_command(root, specification)
         for specification in _command_specs(
             synthetic_path,
             installed_path,
             corpus_path,
+            contract_quality_path,
+            resource_bounds_path,
             corpus_root,
         )
     )
@@ -105,6 +131,12 @@ def _collect_inputs(
         synthetic=load_evidence(synthetic_path, SYNTHETIC_SCHEMA, candidate),
         installed=load_evidence(installed_path, INSTALLED_SCHEMA, candidate),
         corpus=load_evidence(corpus_path, CORPUS_SCHEMA, candidate),
+        contract_quality=load_evidence(
+            contract_quality_path, CONTRACT_QUALITY_SCHEMA, candidate
+        ),
+        resource_bounds=load_evidence(
+            resource_bounds_path, RESOURCE_BOUNDS_SCHEMA, candidate
+        ),
     )
 
 
@@ -135,15 +167,28 @@ def aggregate(root: Path) -> dict[str, Any]:
     covered_obligations = set(inputs.synthetic.get("obligations", ()))
     covered_obligations.update(INSTALLED_OBLIGATIONS)
     covered_obligations.update(CORPUS_OBLIGATIONS)
+    for document in (inputs.contract_quality, inputs.resource_bounds):
+        covered_obligations.update(
+            validated_pass_claims(
+                document,
+                "obligations",
+                REQUIRED_OBLIGATIONS,
+            )
+        )
     obligations = coverage_records(
         REQUIRED_OBLIGATIONS,
         covered_obligations,
         evidence_ids,
         "No exact-candidate executable evidence is aggregated yet.",
     )
+    covered_gates = set(AGGREGATED_GATES)
+    for document in (inputs.contract_quality, inputs.resource_bounds):
+        covered_gates.update(
+            validated_pass_claims(document, "gates", REQUIRED_GATES)
+        )
     gates = coverage_records(
         REQUIRED_GATES,
-        set(AGGREGATED_GATES),
+        covered_gates,
         evidence_ids,
         "The required release-wide evidence tier is not aggregated yet.",
     )

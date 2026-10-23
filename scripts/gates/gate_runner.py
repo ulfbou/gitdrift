@@ -515,8 +515,12 @@ def run_gate(arguments: argparse.Namespace) -> int:
         sys.stdout.write(completed.stdout)
         sys.stderr.write(completed.stderr)
         if completed.returncode != 0:
+            stdout = completed.stdout.strip() or "<empty>"
+            stderr = completed.stderr.strip() or "<empty>"
             raise RunnerError(
-                f"container gate failed: {completed.returncode}"
+                f"container gate failed: {completed.returncode}\n"
+                f"container stdout:\n{stdout}\n"
+                f"container stderr:\n{stderr}"
             )
     envelope = validate_gate_outputs(
         evidence_dir,

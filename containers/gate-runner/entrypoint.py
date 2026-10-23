@@ -150,8 +150,18 @@ def execute_gate(arguments: argparse.Namespace) -> int:
         expected_tree=arguments.candidate_tree,
         expected_bundle_sha256=arguments.bundle_sha256,
     )
-    replacements = {"{python}": sys.executable, "{workspace}": str(workspace), "{evidence}": str(evidence)}
-    command = tuple(replacements.get(part, part) for part in command_template)
+    replacements = {
+        "{python}": sys.executable,
+        "{workspace}": str(workspace),
+        "{evidence}": str(evidence),
+    }
+
+    def expand(part: str) -> str:
+        for placeholder, value in replacements.items():
+            part = part.replace(placeholder, value)
+        return part
+
+    command = tuple(expand(part) for part in command_template)
     before = git(workspace, "status", "--porcelain=v1", "--untracked-files=all")
     completed = run(command, cwd=workspace, check=False)
     after = git(workspace, "status", "--porcelain=v1", "--untracked-files=all")

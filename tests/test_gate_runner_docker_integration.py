@@ -40,6 +40,20 @@ def integration_enabled() -> bool:
     return os.environ.get(INTEGRATION_FLAG) == "1"
 
 
+class GateEntrypointTemplateTests(unittest.TestCase):
+    def test_manifest_uses_embedded_evidence_placeholder(self) -> None:
+        manifest_path = RUNNER_CONTEXT / "gates.json"
+        document = json.loads(
+            manifest_path.read_text(encoding="utf-8")
+        )
+        command = document["gates"]["platform-observation"]["command"]
+        self.assertIn(
+            "{evidence}/gitdrift-platform-observation.json",
+            command,
+        )
+
+
+
 def execute(
     *command: str,
     cwd: pathlib.Path | None = None,

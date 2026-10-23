@@ -30,7 +30,7 @@ Windows Docker Desktop must use the Windows engine. Build and run this image wit
 
 MinGit is a repository-owned dependency: the Dockerfile fixes the x64 MinGit 2.56.0.2 archive URL and SHA-256, verifies the archive before extraction, and asserts the installed Git version. Callers must not supply MinGit coordinates as build arguments.
 
-The Windows base is pinned to both the LTSC 2022 tag and its immutable digest:
+The Windows base is pinned to both the LTSC 2019 tag and its immutable digest:
 
 ```text
 mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2019@sha256:89adec141e322212409a400afa54c1c9341816237076860476d2d8462fc71828

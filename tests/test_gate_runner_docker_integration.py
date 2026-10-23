@@ -295,13 +295,6 @@ class WindowsDockerIntegrationTests(unittest.TestCase):
             raise unittest.SkipTest(
                 "repository must be clean for exact-candidate integration"
             )
-        mingit_url = os.environ.get(WINDOWS_MINGIT_URL)
-        mingit_sha256 = os.environ.get(WINDOWS_MINGIT_SHA256)
-        if not mingit_url or not mingit_sha256:
-            raise unittest.SkipTest(
-                f"set {WINDOWS_MINGIT_URL} and "
-                f"{WINDOWS_MINGIT_SHA256} for Windows integration"
-            )
         cls.identity = identity
         execute(
             *runner.build_command(
@@ -309,8 +302,6 @@ class WindowsDockerIntegrationTests(unittest.TestCase):
                 context=RUNNER_CONTEXT,
                 image=cls.image,
                 revision=identity["commit"],
-                mingit_url=mingit_url,
-                mingit_sha256=mingit_sha256,
             )
         )
 

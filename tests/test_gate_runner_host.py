@@ -97,7 +97,10 @@ class GateRunnerHostTests(unittest.TestCase):
         self.assertIn("--read-only", command)
         self.assertIn("ALL", command)
         self.assertIn("no-new-privileges", command)
-        self.assertIn("/workspace:rw,nosuid,size=1g", command)
+        self.assertIn(
+            "/workspace:rw,nosuid,size=1g,uid=10001,gid=10001,mode=0755",
+            command,
+        )
 
     def test_validate_inspection_rejects_embedded_candidate(self) -> None:
         payload = json.dumps(

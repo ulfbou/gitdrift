@@ -68,23 +68,27 @@ class ResourceBoundsAcceptanceTests(unittest.TestCase):
             "outcome": "pass",
         }
 
-    def test_boundary_remains_partial_and_names_missing_limits(
+    def test_boundary_promotes_only_resource_owned_claims(
         self,
     ) -> None:
         self.assertEqual(
             acceptance.OBLIGATION_CLAIMS,
-            {"GD01-031": "partial"},
+            {"GD01-031": "pass"},
         )
         self.assertEqual(
             acceptance.GATE_CLAIMS,
             {
-                "G6": "partial",
+                "G6": "pass",
                 "G7": "partial",
             },
         )
+        self.assertIn(
+            "tests.test_working_tree_capture",
+            acceptance.TEST_MODULES,
+        )
         self.assertTrue(
             any(
-                "file-count" in item
+                "platform matrix" in item
                 for item in acceptance.LIMITATIONS
             )
         )
@@ -95,7 +99,7 @@ class ResourceBoundsAcceptanceTests(unittest.TestCase):
         document = self.document()
         document["obligations"]["GD01-031"][
             "outcome"
-        ] = "pass"
+        ] = "partial"
 
         with self.assertRaisesRegex(
             acceptance.AcceptanceFailure,

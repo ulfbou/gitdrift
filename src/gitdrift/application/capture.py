@@ -59,12 +59,16 @@ def capture_working_tree(
     untracked_policy: UntrackedPolicy = UntrackedPolicy.EXCLUDE,
     ignored_policy: IgnoredPolicy = IgnoredPolicy.EXCLUDE,
     selected_paths: tuple[str, ...] = (),
+    max_files: int | None = None,
+    max_input_bytes: int | None = None,
 ) -> RepositoryState:
     """Capture a reproducible working-tree manifest through a repository port."""
     evidence = reader.capture_working_tree(
         untracked_policy=untracked_policy,
         ignored_policy=ignored_policy,
         selected_paths=selected_paths,
+        max_files=max_files,
+        max_input_bytes=max_input_bytes,
     )
     committed_base_state_id = None
     if evidence.base_commit_id and evidence.base_tree_id:

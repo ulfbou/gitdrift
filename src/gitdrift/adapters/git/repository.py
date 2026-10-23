@@ -17,6 +17,7 @@ from gitdrift.ports import (
     IndexEvidence,
     UntrackedPolicy,
     UpstreamEvidence,
+    ResourceExhaustion,
     WorkingTreeEntry,
     WorkingTreeEntryKind,
     WorkingTreeEvidence,
@@ -393,6 +394,54 @@ class GitRepositoryReader:
 
         return tuple(sorted(paths))
 
+    def _entry_input_size(
+        self,
+        path: str,
+        index_entry: IndexEntry | None,
+    ) -> int:
+        absolute = self._root / path
+
+        try:
+            metadata = absolute.lstat()
+        except FileNotFoundError:
+            return 0
+        except OSError:
+            return 0
+
+        if stat.S_ISLNK(metadata.st_mode):
+            try:
+                return len(os.fsencode(os.readlink(absolute)))
+            except OSError:
+                return 0
+
+        if (
+            index_entry is not None
+            and index_entry.mode == "160000"
+        ):
+            return 0
+
+        if stat.S_ISREG(metadata.st_mode):
+            return metadata.st_size
+
+        return 0
+
+    @staticmethod
+    def _validate_resource_limit(
+        name: str,
+        value: int | None,
+    ) -> None:
+        if value is None:
+            return
+
+        if (
+            not isinstance(value, int)
+            or isinstance(value, bool)
+            or value < 1
+        ):
+            raise ValueError(
+                f"{name} must be a positive integer when provided"
+            )
+
     def _capture_entry(
         self,
         path: str,
@@ -548,7 +597,14 @@ class GitRepositoryReader:
             IgnoredPolicy.EXCLUDE
         ),
         selected_paths: tuple[str, ...] = (),
+        max_files: int | None = None,
+        max_input_bytes: int | None = None,
     ) -> WorkingTreeEvidence:
+        self._validate_resource_limit("max_files", max_files)
+        self._validate_resource_limit(
+            "max_input_bytes",
+            max_input_bytes,
+        )
         repository_id, object_format = (
             self._repository_context()
         )
@@ -581,14 +637,50 @@ class GitRepositoryReader:
             selected_paths=selected_paths,
         )
 
-        entries = tuple(
-            self._capture_entry(
+        captured_entries: list[WorkingTreeEntry] = []
+        input_bytes = 0
+        exhaustion: ResourceExhaustion | None = None
+
+        for position, path in enumerate(paths):
+            if (
+                max_files is not None
+                and len(captured_entries) >= max_files
+            ):
+                exhaustion = ResourceExhaustion(
+                    dimension="working-tree-files",
+                    configured_limit=max_files,
+                    observed_usage=len(captured_entries),
+                    omitted_paths=paths[position:],
+                )
+                break
+
+            input_size = self._entry_input_size(
                 path,
                 normal_index.get(path),
             )
-            for path in paths
-        )
 
+            if (
+                max_input_bytes is not None
+                and input_bytes + input_size > max_input_bytes
+            ):
+                exhaustion = ResourceExhaustion(
+                    dimension="working-tree-input-bytes",
+                    configured_limit=max_input_bytes,
+                    observed_usage=input_bytes,
+                    omitted_paths=paths[position:],
+                )
+                break
+
+            entry = self._capture_entry(
+                path,
+                normal_index.get(path),
+            )
+            captured_entries.append(entry)
+
+            if entry.size is not None:
+                input_bytes += entry.size
+
+        entries = tuple(captured_entries)
         status_after = self._status_marker()
         head_after = self._head_marker()
         index_after = self.capture_index()
@@ -606,12 +698,16 @@ class GitRepositoryReader:
                 "working-tree selection changed during capture"
             )
 
+        captured_paths = tuple(
+            entry.path
+            for entry in entries
+        )
         verification_entries = tuple(
             self._capture_entry(
                 path,
                 normal_index.get(path),
             )
-            for path in paths
+            for path in captured_paths
         )
         if entries != verification_entries:
             raise WorkingTreeChangedError(
@@ -633,10 +729,25 @@ class GitRepositoryReader:
                 "selected_paths": tuple(
                     sorted(selected_paths)
                 ),
+                "max_files": max_files,
+                "max_input_bytes": max_input_bytes,
                 "entries": entries,
+                "file_count": len(entries),
+                "input_bytes": input_bytes,
+                "resource_exhaustion": exhaustion,
             },
         )
-
+        limitations = (
+            ()
+            if exhaustion is None
+            else (
+                (
+                    f"Resource exhaustion: {exhaustion.dimension} "
+                    f"limit {exhaustion.configured_limit}; "
+                    f"omitted {len(exhaustion.omitted_paths)} paths."
+                ),
+            )
+        )
         return WorkingTreeEvidence(
             repository_id=repository_id,
             object_format=object_format,
@@ -650,4 +761,8 @@ class GitRepositoryReader:
             selected_paths=tuple(sorted(selected_paths)),
             entries=entries,
             manifest_identity=manifest_identity,
+            file_count=len(entries),
+            input_bytes=input_bytes,
+            resource_exhaustion=exhaustion,
+            limitations=limitations,
         )

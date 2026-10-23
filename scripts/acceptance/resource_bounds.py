@@ -16,12 +16,13 @@ TEST_MODULES = (
     "tests.test_git_command_timeouts",
     "tests.test_state_awareness_output_budget",
     "tests.test_state_awareness_profile",
+    "tests.test_working_tree_capture",
 )
-OBLIGATION_CLAIMS = {"GD01-031": "partial"}
-GATE_CLAIMS = {"G6": "partial", "G7": "partial"}
+OBLIGATION_CLAIMS = {"GD01-031": "pass"}
+GATE_CLAIMS = {"G6": "pass", "G7": "partial"}
 LIMITATIONS = (
-    "Repository file-count and input-byte ceilings remain unproven.",
-    "Required-platform execution is outside this producer.",
+    "G7 remains partial until this resource record is aggregated with "
+    "the exact-candidate Linux and Windows platform matrix.",
 )
 
 

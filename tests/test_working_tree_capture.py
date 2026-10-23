@@ -249,6 +249,153 @@ class WorkingTreeCaptureTests(unittest.TestCase):
             ).hexdigest(),
         )
 
+    def test_file_count_ceiling_preserves_entries_and_names_omissions(
+        self,
+    ) -> None:
+        temporary, root = repository()
+        self.addCleanup(temporary.cleanup)
+        before = snapshot(root)
+
+        evidence = GitRepositoryReader(root).capture_working_tree(
+            max_files=2,
+        )
+
+        self.assertEqual(snapshot(root), before)
+        self.assertEqual(evidence.file_count, 2)
+        self.assertEqual(
+            [entry.path for entry in evidence.entries],
+            [".gitignore", "delete.txt"],
+        )
+        self.assertIsNotNone(evidence.resource_exhaustion)
+        assert evidence.resource_exhaustion
+        self.assertEqual(
+            evidence.resource_exhaustion.dimension,
+            "working-tree-files",
+        )
+        self.assertEqual(
+            evidence.resource_exhaustion.configured_limit,
+            2,
+        )
+        self.assertEqual(
+            evidence.resource_exhaustion.observed_usage,
+            2,
+        )
+        self.assertEqual(
+            evidence.resource_exhaustion.omitted_paths,
+            ("tracked.txt",),
+        )
+        self.assertTrue(evidence.limitations)
+
+    def test_exact_file_count_ceiling_is_complete(self) -> None:
+        temporary, root = repository()
+        self.addCleanup(temporary.cleanup)
+
+        evidence = GitRepositoryReader(root).capture_working_tree(
+            max_files=3,
+        )
+
+        self.assertEqual(evidence.file_count, 3)
+        self.assertIsNone(evidence.resource_exhaustion)
+        self.assertFalse(evidence.limitations)
+
+    def test_input_byte_ceiling_preserves_entries_and_names_omissions(
+        self,
+    ) -> None:
+        temporary, root = repository()
+        self.addCleanup(temporary.cleanup)
+        before = snapshot(root)
+        first_size = (root / ".gitignore").stat().st_size
+
+        evidence = GitRepositoryReader(root).capture_working_tree(
+            max_input_bytes=first_size,
+        )
+
+        self.assertEqual(snapshot(root), before)
+        self.assertEqual(
+            [entry.path for entry in evidence.entries],
+            [".gitignore"],
+        )
+        self.assertEqual(evidence.input_bytes, first_size)
+        self.assertIsNotNone(evidence.resource_exhaustion)
+        assert evidence.resource_exhaustion
+        self.assertEqual(
+            evidence.resource_exhaustion.dimension,
+            "working-tree-input-bytes",
+        )
+        self.assertEqual(
+            evidence.resource_exhaustion.configured_limit,
+            first_size,
+        )
+        self.assertEqual(
+            evidence.resource_exhaustion.observed_usage,
+            first_size,
+        )
+        self.assertEqual(
+            evidence.resource_exhaustion.omitted_paths,
+            ("delete.txt", "tracked.txt"),
+        )
+
+    def test_exact_input_byte_ceiling_is_complete(self) -> None:
+        temporary, root = repository()
+        self.addCleanup(temporary.cleanup)
+        total = sum(
+            (root / path).stat().st_size
+            for path in (".gitignore", "delete.txt", "tracked.txt")
+        )
+
+        first = GitRepositoryReader(root).capture_working_tree(
+            max_input_bytes=total,
+        )
+        second = GitRepositoryReader(root).capture_working_tree(
+            max_input_bytes=total,
+        )
+
+        self.assertEqual(first, second)
+        self.assertEqual(first.input_bytes, total)
+        self.assertIsNone(first.resource_exhaustion)
+
+    def test_resource_limits_reject_invalid_values(self) -> None:
+        temporary, root = repository()
+        self.addCleanup(temporary.cleanup)
+        reader = GitRepositoryReader(root)
+
+        for name, value in (
+            ("max_files", 0),
+            ("max_files", -1),
+            ("max_files", True),
+            ("max_input_bytes", 0),
+            ("max_input_bytes", -1),
+            ("max_input_bytes", False),
+        ):
+            with self.subTest(name=name, value=value):
+                with self.assertRaisesRegex(
+                    ValueError,
+                    "positive integer",
+                ):
+                    reader.capture_working_tree(
+                        **{name: value},
+                    )
+
+    def test_resource_limits_affect_manifest_identity(self) -> None:
+        temporary, root = repository()
+        self.addCleanup(temporary.cleanup)
+        reader = GitRepositoryReader(root)
+
+        unlimited = reader.capture_working_tree()
+        file_limited = reader.capture_working_tree(max_files=3)
+        byte_limited = reader.capture_working_tree(
+            max_input_bytes=10_000,
+        )
+
+        self.assertNotEqual(
+            unlimited.manifest_identity,
+            file_limited.manifest_identity,
+        )
+        self.assertNotEqual(
+            unlimited.manifest_identity,
+            byte_limited.manifest_identity,
+        )
+
     def test_selected_missing_path_is_rejected(self) -> None:
         temporary, root = repository()
         self.addCleanup(temporary.cleanup)

@@ -48,6 +48,7 @@ from .repository import (
     UpstreamEvidence,
     WorkingTreeEntry,
     WorkingTreeEntryKind,
+    ResourceExhaustion,
     WorkingTreeEvidence,
 )
 __all__ = [
@@ -89,5 +90,6 @@ __all__ = [
     "UpstreamEvidence",
     "WorkingTreeEntry",
     "WorkingTreeEntryKind",
+    "ResourceExhaustion",
     "WorkingTreeEvidence",
 ]

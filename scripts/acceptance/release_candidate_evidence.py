@@ -24,12 +24,19 @@ from release_evidence_contracts import (
     CommandSpec,
     EvidenceInputs,
     ReleaseEvidenceFailure,
+    PLATFORM_MATRIX_SCHEMA,
 )
 from release_evidence_coverage import coverage_records, is_complete
-from release_evidence_documents import load_evidence, validated_pass_claims
+from release_evidence_documents import (
+    load_evidence,
+    validate_g7_composition,
+    validate_platform_matrix,
+    validated_pass_claims,
+)
 from release_evidence_process import git, run_command
 
 CORPUS_ROOT_ENV = "GITDRIFT_DX_ARTIFACTS_CORPUS_ROOT"
+PLATFORM_MATRIX_PATH_ENV = "GITDRIFT_PLATFORM_MATRIX_PATH"
 CORPUS_COMMIT = "0d49b22ddecab894d39bee30ecb49bf1353d7788"
 CORPUS_TREE = "d463bb9cb56ba84d8e0b1584332cfd1a1565b075"
 
@@ -114,10 +121,13 @@ def _command_specs(
 def _collect_inputs(
     root: Path,
     candidate: str,
+    source_tree: str,
     evidence_root: Path,
     corpus_root: Path,
+    platform_matrix_path: Path,
 ) -> EvidenceInputs:
     synthetic_path = evidence_root / "synthetic.json"
+    semantic_contracts_path = evidence_root / "semantic-contracts.json"
     installed_path = evidence_root / "installed.json"
     corpus_path = evidence_root / "corpus.json"
     contract_quality_path = evidence_root / "contract-quality.json"
@@ -126,6 +136,7 @@ def _collect_inputs(
         run_command(root, specification)
         for specification in _command_specs(
             synthetic_path,
+            semantic_contracts_path,
             installed_path,
             corpus_path,
             contract_quality_path,
@@ -141,6 +152,11 @@ def _collect_inputs(
     return EvidenceInputs(
         commands=commands,
         synthetic=load_evidence(synthetic_path, SYNTHETIC_SCHEMA, candidate),
+        semantic_contracts=load_evidence(
+            semantic_contracts_path,
+            SEMANTIC_CONTRACTS_SCHEMA,
+            candidate,
+        ),
         installed=load_evidence(installed_path, INSTALLED_SCHEMA, candidate),
         corpus=load_evidence(corpus_path, CORPUS_SCHEMA, candidate),
         contract_quality=load_evidence(
@@ -148,6 +164,15 @@ def _collect_inputs(
         ),
         resource_bounds=load_evidence(
             resource_bounds_path, RESOURCE_BOUNDS_SCHEMA, candidate
+        ),
+        platform_matrix=validate_platform_matrix(
+            load_evidence(
+                platform_matrix_path,
+                PLATFORM_MATRIX_SCHEMA,
+                candidate,
+            ),
+            candidate=candidate,
+            source_tree=source_tree,
         ),
     )
 
@@ -166,14 +191,26 @@ def aggregate(root: Path) -> dict[str, Any]:
             f"{CORPUS_ROOT_ENV} must identify the pinned corpus worktree"
         )
     corpus_root = Path(corpus_value).resolve()
+    platform_matrix_value = os.environ.get(
+        PLATFORM_MATRIX_PATH_ENV
+    )
+    if not platform_matrix_value:
+        raise ReleaseEvidenceFailure(
+            f"{PLATFORM_MATRIX_PATH_ENV} must identify "
+            "the exact-candidate platform matrix"
+        )
+    platform_matrix_path = Path(platform_matrix_value).resolve()
+    source_tree = git(root, "rev-parse", "HEAD^{tree}")
     with tempfile.TemporaryDirectory(
         prefix="gitdrift-release-evidence-"
     ) as directory:
         inputs = _collect_inputs(
             root,
             candidate,
+            source_tree,
             Path(directory),
             corpus_root,
+            platform_matrix_path,
         )
     evidence_ids = tuple(item.identity for item in inputs.commands)
     covered_obligations = set(inputs.synthetic.get("obligations", ()))
@@ -197,6 +234,15 @@ def aggregate(root: Path) -> dict[str, Any]:
                 REQUIRED_OBLIGATIONS,
             )
         )
+    platform_obligations, platform_gates = (
+        validate_g7_composition(
+            inputs.platform_matrix,
+            inputs.resource_bounds,
+            candidate=candidate,
+            source_tree=source_tree,
+        )
+    )
+    covered_obligations.update(platform_obligations)
     obligations = coverage_records(
         REQUIRED_OBLIGATIONS,
         covered_obligations,
@@ -208,6 +254,7 @@ def aggregate(root: Path) -> dict[str, Any]:
         covered_gates.update(
             validated_pass_claims(document, "gates", REQUIRED_GATES)
         )
+    covered_gates.update(platform_gates)
     gates = coverage_records(
         REQUIRED_GATES,
         covered_gates,
@@ -218,7 +265,7 @@ def aggregate(root: Path) -> dict[str, Any]:
     return {
         "schema": SCHEMA,
         "candidate_commit": candidate,
-        "source_tree_identity": git(root, "rev-parse", "HEAD^{tree}"),
+        "source_tree_identity": source_tree,
         "commands": [item.to_dict() for item in inputs.commands],
         "generated_artifacts": artifacts if isinstance(artifacts, list) else [],
         "corpus_evidence": inputs.corpus,

@@ -1,0 +1,38 @@
+# escape=`
+FROM mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022
+
+ARG RUNNER_REVISION
+ARG MINGIT_URL
+ARG MINGIT_SHA256
+
+LABEL org.opencontainers.image.title="Gitdrift Windows gate runner"
+LABEL org.opencontainers.image.description="Reusable Windows Server Core runner for Gitdrift acceptance gates"
+LABEL org.opencontainers.image.source="https://github.com/ulfbou/gitdrift"
+LABEL org.opencontainers.image.revision="${RUNNER_REVISION}"
+LABEL dev.gitdrift.runner.contract="gitdrift-gate-runner-v1"
+LABEL dev.gitdrift.runner.platform="Windows"
+LABEL dev.gitdrift.runner.candidate-embedded="false"
+
+SHELL ["powershell.exe", "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+RUN if ([string]::IsNullOrWhiteSpace($env:MINGIT_URL)) { throw 'MINGIT_URL is required' }; `
+    if ($env:MINGIT_SHA256 -notmatch '^[0-9a-fA-F]{64}$') { throw 'MINGIT_SHA256 must be a SHA-256' }; `
+    Invoke-WebRequest -UseBasicParsing -Uri $env:MINGIT_URL -OutFile C:\mingit.zip; `
+    $actual = (Get-FileHash C:\mingit.zip -Algorithm SHA256).Hash.ToLowerInvariant(); `
+    if ($actual -ne $env:MINGIT_SHA256.ToLowerInvariant()) { throw "MinGit SHA-256 mismatch: $actual" }; `
+    Expand-Archive C:\mingit.zip -DestinationPath C:\Git; `
+    Remove-Item C:\mingit.zip; `
+    New-Item -ItemType Directory -Force C:
+unner, C:
+equest, C:\workspace, C:\evidence | Out-Null
+
+ENV PATH="C:\Git\cmd;C:\Gitin;C:\Python;C:\Python\Scripts;C:\Windows\System32;C:\Windows"
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH="C:\workspace\src;C:\workspace	ests"
+
+COPY entrypoint.py gates.json C:/runner/
+
+WORKDIR C:/runner
+ENTRYPOINT ["python", "C:/runner/entrypoint.py", "--manifest", "C:/runner/gates.json"]
+CMD ["inspect"]

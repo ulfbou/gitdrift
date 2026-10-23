@@ -101,6 +101,7 @@ Gitdrift is a DX-first repository evolution forensics tool. It reconstructs how 
 - [Gitdrift 0.1 Accept ready checklist](releases/0.1/acceptance-checklist.md)
 - [Gitdrift 0.1 Obligation matrix](releases/0.1/obligation-matrix.md)
 - [Gitdrift 0.1 Release Gates](releases/0.1/release-gates.md)
+- releases/0.1/release-closure-reconciliation.md
 
 ## Controlling principles
 

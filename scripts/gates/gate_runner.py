@@ -3,9 +3,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import pathlib
-import re
 import shutil
 import subprocess
 import sys
@@ -14,6 +12,13 @@ from collections.abc import Sequence
 from typing import Any
 
 RUNNER_CONTRACT = "gitdrift-gate-runner-v1"
+WINDOWS_BASE_NAME = "mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022"
+WINDOWS_BASE_DIGEST = "sha256:b583b4cab3fafc07299e758737b3576aa08e6c62e8c88b5f15434d3bb37954b4"
+WINDOWS_BASE_REFERENCE = f"{WINDOWS_BASE_NAME}@{WINDOWS_BASE_DIGEST}"
+WINDOWS_MINGIT_URL = "https://github.com/git-for-windows/git/releases/download/v2.56.0.windows.2/MinGit-2.56.0.2-64-bit.zip"
+WINDOWS_MINGIT_SHA256 = "da35e72aa21c005a5a0d298cfbae110bc1609a815730ea0dde84b01a1b3cd3be"
+WINDOWS_GIT_VERSION = "2.56.0.windows.2"
+WINDOWS_GIT_ARTIFACT_VERSION = "2.56.0.2"
 DEFAULT_IMAGES = {
     "linux": "gitdrift-gate-runner:python311-v1",
     "windows": "gitdrift-gate-runner-windows:python311-ltsc2022-v1",
@@ -155,6 +160,18 @@ def verify_labels(
         "dev.gitdrift.runner.candidate-embedded": "false",
         "org.opencontainers.image.revision": revision,
     }
+    if platform_name == "windows":
+        expected.update(
+            {
+                "org.opencontainers.image.base.name": WINDOWS_BASE_NAME,
+                "org.opencontainers.image.base.digest": WINDOWS_BASE_DIGEST,
+                "dev.gitdrift.runner.base.reference": WINDOWS_BASE_REFERENCE,
+                "dev.gitdrift.runner.git-version": WINDOWS_GIT_VERSION,
+                "dev.gitdrift.runner.git-artifact-version": WINDOWS_GIT_ARTIFACT_VERSION,
+                "dev.gitdrift.runner.git-url": WINDOWS_MINGIT_URL,
+                "dev.gitdrift.runner.git-sha256": WINDOWS_MINGIT_SHA256,
+            }
+        )
     for key, value in expected.items():
         if labels.get(key) != value:
             raise RunnerError(
@@ -169,8 +186,6 @@ def build_command(
     context: pathlib.Path,
     image: str,
     revision: str,
-    mingit_url: str | None,
-    mingit_sha256: str | None,
 ) -> tuple[str, ...]:
     dockerfile = context / f"Dockerfile.{platform_name}"
     command = [
@@ -184,23 +199,7 @@ def build_command(
         image,
     ]
     if platform_name == "windows":
-        if not mingit_url:
-            raise RunnerError("--mingit-url is required for Windows")
-        if not mingit_sha256 or not re.fullmatch(
-            r"[0-9a-fA-F]{64}", mingit_sha256
-        ):
-            raise RunnerError(
-                "--mingit-sha256 must be a 64-character SHA-256"
-            )
-        command.extend(
-            (
-                "--isolation=hyperv",
-                "--build-arg",
-                f"MINGIT_URL={mingit_url}",
-                "--build-arg",
-                f"MINGIT_SHA256={mingit_sha256.lower()}",
-            )
-        )
+        command.append("--isolation=hyperv")
     command.append(str(context))
     return tuple(command)
 
@@ -249,20 +248,42 @@ def validate_inspection(
     return document
 
 
-def image_metadata(image: str) -> dict[str, Any]:
+def image_metadata(
+    image: str,
+    *,
+    platform_name: str,
+) -> dict[str, Any]:
     documents = json.loads(
         execute(("docker", "image", "inspect", image)).stdout
     )
+    if not isinstance(documents, list) or len(documents) != 1:
+        raise RunnerError("Docker returned invalid image metadata")
     document = documents[0]
-    return {
+    labels = document.get("Config", {}).get("Labels") or {}
+    if not isinstance(labels, dict):
+        raise RunnerError("image labels are invalid")
+    metadata: dict[str, Any] = {
         "image_reference": image,
         "image_id": document.get("Id"),
         "repo_digests": document.get("RepoDigests") or [],
         "created": document.get("Created"),
         "os": document.get("Os"),
         "architecture": document.get("Architecture"),
-        "labels": document.get("Config", {}).get("Labels") or {},
+        "labels": labels,
     }
+    if platform_name == "windows":
+        metadata["base_image"] = {
+            "requested_tag": labels.get("org.opencontainers.image.base.name"),
+            "resolved_digest": labels.get("org.opencontainers.image.base.digest"),
+            "requested_reference": labels.get("dev.gitdrift.runner.base.reference"),
+        }
+        metadata["git_dependency"] = {
+            "version": labels.get("dev.gitdrift.runner.git-version"),
+            "artifact_version": labels.get("dev.gitdrift.runner.git-artifact-version"),
+            "url": labels.get("dev.gitdrift.runner.git-url"),
+            "sha256": labels.get("dev.gitdrift.runner.git-sha256"),
+        }
+    return metadata
 
 
 def atomic_json(path: pathlib.Path, document: dict[str, Any]) -> None:
@@ -294,8 +315,6 @@ def build_runner(arguments: argparse.Namespace) -> int:
             context=context,
             image=image,
             revision=identity["commit"],
-            mingit_url=arguments.mingit_url,
-            mingit_sha256=arguments.mingit_sha256,
         )
     )
     labels = image_labels(image)
@@ -320,7 +339,7 @@ def build_runner(arguments: argparse.Namespace) -> int:
         "platform": arguments.platform,
         "candidate_embedded": False,
         "runner_revision": identity["commit"],
-        "image": image_metadata(image),
+        "image": image_metadata(image, platform_name=arguments.platform),
         "inspection": json.loads(inspection.stdout),
         "outcome": "pass",
     }
@@ -556,8 +575,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     build.add_argument("--image")
     build.add_argument("--metadata", required=True)
-    build.add_argument("--mingit-url")
-    build.add_argument("--mingit-sha256")
     run_parser = subparsers.add_parser("run")
     add_identity_arguments(run_parser)
     run_parser.add_argument(

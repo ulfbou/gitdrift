@@ -26,10 +26,20 @@ The Linux base is pinned by digest.
 
 ## Windows build
 
-Windows Docker Desktop must use the Windows engine. Supply an independently pinned MinGit archive; host-installed Git is not copied into the image.
+Windows Docker Desktop must use the Windows engine. Build and run this image with Hyper-V isolation. Host-installed Git is not copied into the image.
+
+MinGit is a repository-owned dependency: the Dockerfile fixes the x64 MinGit 2.56.0.2 archive URL and SHA-256, verifies the archive before extraction, and asserts the installed Git version. Callers must not supply MinGit coordinates as build arguments.
+
+The Windows base is pinned to both the LTSC 2022 tag and its immutable digest:
 
 ```text
-docker build --isolation=hyperv --file Dockerfile.windows --build-arg RUNNER_REVISION=<commit> --build-arg MINGIT_URL=<url> --build-arg MINGIT_SHA256=<sha256> --tag gitdrift-gate-runner-windows:python311-ltsc2022-v1 .
+mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022@sha256:b583b4cab3fafc07299e758737b3576aa08e6c62e8c88b5f15434d3bb37954b4
 ```
 
-Record the resolved Windows base-image digest, MinGit URL and SHA-256, image ID, and runner revision in build evidence. Registry publication, SBOM and provenance attestations are follow-up infrastructure boundaries.
+Build from this directory and bind the image to the repository revision:
+
+```text
+docker build --isolation=hyperv --file Dockerfile.windows --build-arg RUNNER_REVISION=<commit> --tag gitdrift-gate-runner-windows:python311-ltsc2022-v1 .
+```
+
+The build metadata records the requested base tag, pinned base digest, MinGit URL and SHA-256, image ID and digest information, and runner revision. Registry publication, SBOM and provenance attestations remain follow-up infrastructure boundaries.

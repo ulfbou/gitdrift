@@ -1,36 +1,63 @@
 # escape=`
-FROM mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022
+FROM mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022@sha256:b583b4cab3fafc07299e758737b3576aa08e6c62e8c88b5f15434d3bb37954b4
 
 ARG RUNNER_REVISION
-ARG MINGIT_URL
-ARG MINGIT_SHA256
 
-LABEL org.opencontainers.image.title="Gitdrift Windows gate runner"
-LABEL org.opencontainers.image.description="Reusable Windows Server Core runner for Gitdrift acceptance gates"
-LABEL org.opencontainers.image.source="https://github.com/ulfbou/gitdrift"
-LABEL org.opencontainers.image.revision="${RUNNER_REVISION}"
-LABEL dev.gitdrift.runner.contract="gitdrift-gate-runner-v1"
-LABEL dev.gitdrift.runner.platform="Windows"
-LABEL dev.gitdrift.runner.candidate-embedded="false"
+# Fixed, repository-owned dependency coordinates. These are not caller-supplied build arguments.
+ENV MINGIT_URL="https://github.com/git-for-windows/git/releases/download/v2.56.0.windows.2/MinGit-2.56.0.2-64-bit.zip" `
+    MINGIT_SHA256="da35e72aa21c005a5a0d298cfbae110bc1609a815730ea0dde84b01a1b3cd3be"
 
-SHELL ["powershell.exe", "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+LABEL org.opencontainers.image.title="Gitdrift gate runner" `
+      org.opencontainers.image.description="Reusable Windows runner for Gitdrift acceptance gates" `
+      org.opencontainers.image.source="https://github.com/ulfbou/gitdrift" `
+      org.opencontainers.image.revision="${RUNNER_REVISION}" `
+      org.opencontainers.image.base.name="mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022" `
+      org.opencontainers.image.base.digest="sha256:b583b4cab3fafc07299e758737b3576aa08e6c62e8c88b5f15434d3bb37954b4" `
+      dev.gitdrift.runner.base.reference="mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022@sha256:b583b4cab3fafc07299e758737b3576aa08e6c62e8c88b5f15434d3bb37954b4" `
+      dev.gitdrift.runner.contract="gitdrift-gate-runner-v1" `
+      dev.gitdrift.runner.platform="Windows" `
+      dev.gitdrift.runner.candidate-embedded="false" `
+      dev.gitdrift.runner.git-version="2.56.0.windows.2" `
+      dev.gitdrift.runner.git-artifact-version="2.56.0.2" `
+      dev.gitdrift.runner.git-url="${MINGIT_URL}" `
+      dev.gitdrift.runner.git-sha256="${MINGIT_SHA256}"
 
-RUN if ([string]::IsNullOrWhiteSpace($env:MINGIT_URL)) { throw 'MINGIT_URL is required' }; `
-    if ($env:MINGIT_SHA256 -notmatch '^[0-9a-fA-F]{64}$') { throw 'MINGIT_SHA256 must be a SHA-256' }; `
-    Invoke-WebRequest -UseBasicParsing -Uri $env:MINGIT_URL -OutFile C:\mingit.zip; `
-    $actual = (Get-FileHash C:\mingit.zip -Algorithm SHA256).Hash.ToLowerInvariant(); `
-    if ($actual -ne $env:MINGIT_SHA256.ToLowerInvariant()) { throw "MinGit SHA-256 mismatch: $actual" }; `
-    Expand-Archive C:\mingit.zip -DestinationPath C:\Git; `
-    Remove-Item C:\mingit.zip; `
-    New-Item -ItemType Directory -Force C:\runner, C:\request, C:\workspace, C:\evidence | Out-Null
-
-ENV PATH="C:\Git\cmd;C:\Git\bin;C:\Python;C:\Python\Scripts;C:\Windows\System32;C:\Windows"
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH="C:\workspace\src;C:\workspace\tests"
+ENV PATH="C:\Git\cmd;C:\Git\bin;C:\Python;C:\Python\Scripts;C:\Windows\System32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0"
+
+SHELL ["powershell.exe", "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+# Download the fixed MinGit archive with bounded retries, then verify it before extraction.
+RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; `
+    $archive = Join-Path $env:TEMP 'mingit.zip'; `
+    $attempt = 0; `
+    do { `
+        $attempt++; `
+        try { Invoke-WebRequest -Uri $env:MINGIT_URL -OutFile $archive -UseBasicParsing -TimeoutSec 120; break } `
+        catch { Remove-Item -LiteralPath $archive -Force -ErrorAction SilentlyContinue; if ($attempt -ge 3) { throw }; Start-Sleep -Seconds (5 * $attempt) } `
+    } while ($attempt -lt 3); `
+    if (-not (Test-Path -LiteralPath $archive -PathType Leaf)) { throw 'MinGit download did not produce an archive.' }; `
+    $actualHash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant(); `
+    if ($actualHash -ne $env:MINGIT_SHA256) { throw "MinGit SHA-256 mismatch: $actualHash" }; `
+    New-Item -ItemType Directory -Path 'C:\Git' -Force | Out-Null; `
+    Expand-Archive -LiteralPath $archive -DestinationPath 'C:\Git' -Force; `
+    Remove-Item -LiteralPath $archive -Force; `
+    $gitVersion = (& 'C:\Git\cmd\git.exe' --version).Trim(); `
+    if ($LASTEXITCODE -ne 0) { throw 'MinGit validation failed: git --version exited unsuccessfully.' }; `
+    if ($gitVersion -ne 'git version 2.56.0.windows.2') { throw "Unexpected MinGit version: $gitVersion" }
+
+# Do not retain dependency coordinates as runtime environment variables; the image labels retain the evidence.
+ENV MINGIT_URL="" MINGIT_SHA256=""
+
+# ContainerUser is non-administrative. Runner files are read/execute; operation directories are writable.
+RUN @('C:\runner', 'C:\request', 'C:\workspace', 'C:\evidence') | ForEach-Object { New-Item -ItemType Directory -Path $_ -Force | Out-Null }; & icacls 'C:\runner' /grant 'ContainerUser:(OI)(CI)RX' /T | Out-Null; if ($LASTEXITCODE -ne 0) { throw 'Could not set runner-directory permissions.' }; foreach ($path in @('C:\request', 'C:\workspace', 'C:\evidence')) { & icacls $path /grant 'ContainerUser:(OI)(CI)M' /T | Out-Null; if ($LASTEXITCODE -ne 0) { throw "Could not set permissions for $path." } }
 
 COPY entrypoint.py gates.json C:/runner/
 
+USER ContainerUser
 WORKDIR C:/runner
-ENTRYPOINT ["python", "C:/runner/entrypoint.py", "--manifest", "C:/runner/gates.json"]
+
+ENTRYPOINT ["python", "C:\\runner\\entrypoint.py", "--manifest", "C:\\runner\\gates.json"]
 CMD ["inspect"]

@@ -41,21 +41,24 @@ class GateRunnerHostTests(unittest.TestCase):
                 expected_tree="tree",
             )
 
+
+
     def test_windows_build_requires_pinned_mingit(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            context = pathlib.Path(temporary)
-            with self.assertRaisesRegex(
-                runner.RunnerError,
-                "--mingit-url is required",
-            ):
-                runner.build_command(
-                    platform_name="windows",
-                    context=context,
-                    image="runner:test",
-                    revision="abc",
-                    mingit_url=None,
-                    mingit_sha256=None,
-                )
+        command = runner.build_command(
+            platform_name="windows",
+            context=pathlib.Path("context"),
+            image="runner:test",
+            revision="abc",
+        )
+        command_text = "\n".join(command)
+
+        self.assertIn("--isolation=hyperv", command)
+        self.assertIn("--build-arg", command)
+        self.assertIn("RUNNER_REVISION=abc", command)
+        self.assertNotIn("MINGIT_URL=", command_text)
+        self.assertNotIn("MINGIT_SHA256=", command_text)
+
+
 
     def test_windows_build_passes_hyperv_and_mingit_identity(self) -> None:
         command = runner.build_command(
@@ -63,15 +66,18 @@ class GateRunnerHostTests(unittest.TestCase):
             context=pathlib.Path("context"),
             image="runner:test",
             revision="abc",
-            mingit_url="https://example.invalid/mingit.zip",
-            mingit_sha256="a" * 64,
         )
+        command_text = "\n".join(command)
+
         self.assertIn("--isolation=hyperv", command)
+        self.assertIn("--build-arg", command)
+        self.assertIn("RUNNER_REVISION=abc", command)
         self.assertIn(
-            "MINGIT_URL=https://example.invalid/mingit.zip",
-            command,
+            "gitdrift-gate-runner-windows:python311-ltsc2022-v1",
+            runner.DEFAULT_IMAGES.values(),
         )
-        self.assertIn("MINGIT_SHA256=" + "a" * 64, command)
+        self.assertNotIn("MINGIT_URL=", command_text)
+        self.assertNotIn("MINGIT_SHA256=", command_text)
 
     def test_linux_run_enforces_network_and_read_only_controls(self) -> None:
         command = runner.gate_run_command(

@@ -13,6 +13,7 @@ class ReleaseAggregationTests(unittest.TestCase):
     def test_acceptance_commands_are_explicit_and_ordered(self) -> None:
         specifications = release._command_specs(
             Path("synthetic"),
+            Path("semantic-contracts"),
             Path("installed"),
             Path("corpus"),
             Path("contract-quality"),
@@ -24,6 +25,7 @@ class ReleaseAggregationTests(unittest.TestCase):
             (
                 "canonical-validation",
                 "synthetic-state-awareness",
+                "semantic-contracts",
                 "installed-distribution",
                 "contract-quality",
                 "resource-bounds",
@@ -34,6 +36,7 @@ class ReleaseAggregationTests(unittest.TestCase):
     def test_corpus_command_is_bound_to_the_immutable_identity(self) -> None:
         specification = release._command_specs(
             Path("synthetic"),
+            Path("semantic-contracts"),
             Path("installed"),
             Path("corpus"),
             Path("contract-quality"),

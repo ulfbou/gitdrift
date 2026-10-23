@@ -18,6 +18,8 @@ from release_evidence_contracts import (
     REQUIRED_GATES,
     REQUIRED_OBLIGATIONS,
     SCHEMA,
+    SEMANTIC_CONTRACTS_OBLIGATIONS,
+    SEMANTIC_CONTRACTS_SCHEMA,
     SYNTHETIC_SCHEMA,
     CommandSpec,
     EvidenceInputs,
@@ -34,6 +36,7 @@ CORPUS_TREE = "d463bb9cb56ba84d8e0b1584332cfd1a1565b075"
 
 def _command_specs(
     synthetic_path: Path,
+    semantic_contracts_path: Path,
     installed_path: Path,
     corpus_path: Path,
     contract_quality_path: Path,
@@ -52,6 +55,15 @@ def _command_specs(
                 "scripts/acceptance/state_awareness_synthetic.py",
                 "--output",
                 str(synthetic_path),
+            ),
+        ),
+        CommandSpec(
+            "semantic-contracts",
+            (
+                sys.executable,
+                "scripts/acceptance/semantic_contracts.py",
+                "--output",
+                str(semantic_contracts_path),
             ),
         ),
         CommandSpec(
@@ -167,6 +179,16 @@ def aggregate(root: Path) -> dict[str, Any]:
     covered_obligations = set(inputs.synthetic.get("obligations", ()))
     covered_obligations.update(INSTALLED_OBLIGATIONS)
     covered_obligations.update(CORPUS_OBLIGATIONS)
+    semantic_claims = validated_pass_claims(
+        inputs.semantic_contracts,
+        "obligations",
+        REQUIRED_OBLIGATIONS,
+    )
+    if semantic_claims != set(SEMANTIC_CONTRACTS_OBLIGATIONS):
+        raise ReleaseEvidenceFailure(
+            "semantic-contract evidence authority must equal GD01-009 through GD01-017"
+        )
+    covered_obligations.update(semantic_claims)
     for document in (inputs.contract_quality, inputs.resource_bounds):
         covered_obligations.update(
             validated_pass_claims(

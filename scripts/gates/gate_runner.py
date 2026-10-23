@@ -21,12 +21,12 @@ DEFAULT_IMAGES = {
 CONTAINER_PATHS = {
     "linux": {
         "request": "/request",
-        "workspace": "/workspace",
+        "workspace": "/workspace/candidate",
         "evidence": "/evidence",
     },
     "windows": {
         "request": r"C:\request",
-        "workspace": r"C:\workspace",
+        "workspace": r"C:\workspace\candidate",
         "evidence": r"C:\evidence",
     },
 }

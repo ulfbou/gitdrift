@@ -52,7 +52,7 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
 ENV MINGIT_URL="" MINGIT_SHA256=""
 
 # ContainerUser is non-administrative. Runner files are read/execute; operation directories are writable.
-RUN @('C:\runner', 'C:\request', 'C:\workspace', 'C:\evidence') | ForEach-Object { New-Item -ItemType Directory -Path $_ -Force | Out-Null }; & icacls 'C:\runner' /grant 'ContainerUser:(OI)(CI)RX' /T | Out-Null; if ($LASTEXITCODE -ne 0) { throw 'Could not set runner-directory permissions.' }; foreach ($path in @('C:\request', 'C:\workspace', 'C:\evidence')) { & icacls $path /grant 'ContainerUser:(OI)(CI)M' /T | Out-Null; if ($LASTEXITCODE -ne 0) { throw "Could not set permissions for $path." } }
+RUN @('C:\runner', 'C:\request', 'C:\workspace', 'C:\evidence') | ForEach-Object { New-Item -ItemType Directory -Path $_ -Force | Out-Null }; & icacls 'C:\runner' /grant '*S-1-5-93-2-2:(OI)(CI)RX' /T | Out-Null; if ($LASTEXITCODE -ne 0) { throw 'Could not set runner-directory permissions.' }; foreach ($path in @('C:\request', 'C:\workspace', 'C:\evidence')) { & icacls $path /grant '*S-1-5-93-2-2:(OI)(CI)M' /T | Out-Null; if ($LASTEXITCODE -ne 0) { throw "Could not set permissions for $path." } }
 
 COPY entrypoint.py gates.json C:/runner/
 

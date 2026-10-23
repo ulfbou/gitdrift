@@ -12,8 +12,8 @@ from collections.abc import Sequence
 from typing import Any
 
 RUNNER_CONTRACT = "gitdrift-gate-runner-v1"
-WINDOWS_BASE_NAME = "mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022"
-WINDOWS_BASE_DIGEST = "sha256:b583b4cab3fafc07299e758737b3576aa08e6c62e8c88b5f15434d3bb37954b4"
+WINDOWS_BASE_NAME = "mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2019"
+WINDOWS_BASE_DIGEST = "sha256:89adec141e322212409a400afa54c1c9341816237076860476d2d8462fc71828"
 WINDOWS_BASE_REFERENCE = f"{WINDOWS_BASE_NAME}@{WINDOWS_BASE_DIGEST}"
 WINDOWS_MINGIT_URL = "https://github.com/git-for-windows/git/releases/download/v2.56.0.windows.2/MinGit-2.56.0.2-64-bit.zip"
 WINDOWS_MINGIT_SHA256 = "da35e72aa21c005a5a0d298cfbae110bc1609a815730ea0dde84b01a1b3cd3be"
@@ -21,7 +21,7 @@ WINDOWS_GIT_VERSION = "2.56.0.windows.2"
 WINDOWS_GIT_ARTIFACT_VERSION = "2.56.0.2"
 DEFAULT_IMAGES = {
     "linux": "gitdrift-gate-runner:python311-v1",
-    "windows": "gitdrift-gate-runner-windows:python311-ltsc2022-v1",
+    "windows": "gitdrift-gate-runner-windows:python311-ltsc2019-v1",
 }
 CONTAINER_PATHS = {
     "linux": {

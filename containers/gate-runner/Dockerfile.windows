@@ -1,5 +1,5 @@
 # escape=`
-FROM mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022@sha256:b583b4cab3fafc07299e758737b3576aa08e6c62e8c88b5f15434d3bb37954b4
+FROM mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2019@sha256:89adec141e322212409a400afa54c1c9341816237076860476d2d8462fc71828
 
 ARG RUNNER_REVISION
 
@@ -11,9 +11,9 @@ LABEL org.opencontainers.image.title="Gitdrift gate runner" `
       org.opencontainers.image.description="Reusable Windows runner for Gitdrift acceptance gates" `
       org.opencontainers.image.source="https://github.com/ulfbou/gitdrift" `
       org.opencontainers.image.revision="${RUNNER_REVISION}" `
-      org.opencontainers.image.base.name="mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022" `
-      org.opencontainers.image.base.digest="sha256:b583b4cab3fafc07299e758737b3576aa08e6c62e8c88b5f15434d3bb37954b4" `
-      dev.gitdrift.runner.base.reference="mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022@sha256:b583b4cab3fafc07299e758737b3576aa08e6c62e8c88b5f15434d3bb37954b4" `
+      org.opencontainers.image.base.name="mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2019" `
+      org.opencontainers.image.base.digest="sha256:89adec141e322212409a400afa54c1c9341816237076860476d2d8462fc71828" `
+      dev.gitdrift.runner.base.reference="mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2019@sha256:89adec141e322212409a400afa54c1c9341816237076860476d2d8462fc71828" `
       dev.gitdrift.runner.contract="gitdrift-gate-runner-v1" `
       dev.gitdrift.runner.platform="Windows" `
       dev.gitdrift.runner.candidate-embedded="false" `

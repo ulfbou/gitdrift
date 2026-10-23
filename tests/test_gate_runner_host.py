@@ -73,7 +73,7 @@ class GateRunnerHostTests(unittest.TestCase):
         self.assertIn("--build-arg", command)
         self.assertIn("RUNNER_REVISION=abc", command)
         self.assertIn(
-            "gitdrift-gate-runner-windows:python311-ltsc2022-v1",
+            "gitdrift-gate-runner-windows:python311-ltsc2019-v1",
             runner.DEFAULT_IMAGES.values(),
         )
         self.assertNotIn("MINGIT_URL=", command_text)

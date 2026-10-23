@@ -33,13 +33,13 @@ MinGit is a repository-owned dependency: the Dockerfile fixes the x64 MinGit 2.5
 The Windows base is pinned to both the LTSC 2022 tag and its immutable digest:
 
 ```text
-mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022@sha256:b583b4cab3fafc07299e758737b3576aa08e6c62e8c88b5f15434d3bb37954b4
+mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2019@sha256:89adec141e322212409a400afa54c1c9341816237076860476d2d8462fc71828
 ```
 
 Build from this directory and bind the image to the repository revision:
 
 ```text
-docker build --isolation=hyperv --file Dockerfile.windows --build-arg RUNNER_REVISION=<commit> --tag gitdrift-gate-runner-windows:python311-ltsc2022-v1 .
+docker build --isolation=hyperv --file Dockerfile.windows --build-arg RUNNER_REVISION=<commit> --tag gitdrift-gate-runner-windows:python311-ltsc2019-v1 .
 ```
 
 The build metadata records the requested base tag, pinned base digest, MinGit URL and SHA-256, image ID and digest information, and runner revision. Registry publication, SBOM and provenance attestations remain follow-up infrastructure boundaries.

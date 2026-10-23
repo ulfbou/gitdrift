@@ -1,0 +1,18 @@
+{
+  "schema": "gitdrift-gate-manifest-v1",
+  "runner_contract": "gitdrift-gate-runner-v1",
+  "gates": {
+    "platform-observation": {
+      "command": [
+        "{python}",
+        "scripts/acceptance/platform_observation.py",
+        "--root",
+        "{workspace}",
+        "--output",
+        "{evidence}/gitdrift-platform-observation.json"
+      ],
+      "network": "none",
+      "candidate": "clean-commit"
+    }
+  }
+}

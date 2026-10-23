@@ -1,6 +1,7 @@
 """Application orchestration for exact-candidate release evidence."""
 from __future__ import annotations
 
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -8,6 +9,10 @@ from typing import Any
 
 from release_evidence_contracts import (
     AGGREGATED_GATES,
+    CORPUS_OBLIGATIONS,
+    CONTRACT_QUALITY_SCHEMA,
+    RESOURCE_BOUNDS_SCHEMA,
+    CORPUS_SCHEMA,
     INSTALLED_OBLIGATIONS,
     INSTALLED_SCHEMA,
     REQUIRED_GATES,
@@ -19,13 +24,21 @@ from release_evidence_contracts import (
     ReleaseEvidenceFailure,
 )
 from release_evidence_coverage import coverage_records, is_complete
-from release_evidence_documents import load_evidence
+from release_evidence_documents import load_evidence, validated_pass_claims
 from release_evidence_process import git, run_command
+
+CORPUS_ROOT_ENV = "GITDRIFT_DX_ARTIFACTS_CORPUS_ROOT"
+CORPUS_COMMIT = "0d49b22ddecab894d39bee30ecb49bf1353d7788"
+CORPUS_TREE = "d463bb9cb56ba84d8e0b1584332cfd1a1565b075"
 
 
 def _command_specs(
     synthetic_path: Path,
     installed_path: Path,
+    corpus_path: Path,
+    contract_quality_path: Path,
+    resource_bounds_path: Path,
+    corpus_root: Path,
 ) -> tuple[CommandSpec, ...]:
     return (
         CommandSpec(
@@ -50,6 +63,39 @@ def _command_specs(
                 str(installed_path),
             ),
         ),
+        CommandSpec(
+            "contract-quality",
+            (
+                sys.executable,
+                "scripts/acceptance/contract_quality.py",
+                "--output",
+                str(contract_quality_path),
+            ),
+        ),
+        CommandSpec(
+            "resource-bounds",
+            (
+                sys.executable,
+                "scripts/acceptance/resource_bounds.py",
+                "--output",
+                str(resource_bounds_path),
+            ),
+        ),
+        CommandSpec(
+            "dx-artifacts-corpus",
+            (
+                sys.executable,
+                "scripts/acceptance/state_awareness_corpus.py",
+                "--corpus-root",
+                str(corpus_root),
+                "--corpus-commit",
+                CORPUS_COMMIT,
+                "--corpus-tree",
+                CORPUS_TREE,
+                "--output",
+                str(corpus_path),
+            ),
+        ),
     )
 
 
@@ -57,12 +103,23 @@ def _collect_inputs(
     root: Path,
     candidate: str,
     evidence_root: Path,
+    corpus_root: Path,
 ) -> EvidenceInputs:
     synthetic_path = evidence_root / "synthetic.json"
     installed_path = evidence_root / "installed.json"
+    corpus_path = evidence_root / "corpus.json"
+    contract_quality_path = evidence_root / "contract-quality.json"
+    resource_bounds_path = evidence_root / "resource-bounds.json"
     commands = tuple(
         run_command(root, specification)
-        for specification in _command_specs(synthetic_path, installed_path)
+        for specification in _command_specs(
+            synthetic_path,
+            installed_path,
+            corpus_path,
+            contract_quality_path,
+            resource_bounds_path,
+            corpus_root,
+        )
     )
     failed = tuple(item.identity for item in commands if item.outcome == "fail")
     if failed:
@@ -73,6 +130,13 @@ def _collect_inputs(
         commands=commands,
         synthetic=load_evidence(synthetic_path, SYNTHETIC_SCHEMA, candidate),
         installed=load_evidence(installed_path, INSTALLED_SCHEMA, candidate),
+        corpus=load_evidence(corpus_path, CORPUS_SCHEMA, candidate),
+        contract_quality=load_evidence(
+            contract_quality_path, CONTRACT_QUALITY_SCHEMA, candidate
+        ),
+        resource_bounds=load_evidence(
+            resource_bounds_path, RESOURCE_BOUNDS_SCHEMA, candidate
+        ),
     )
 
 
@@ -84,23 +148,47 @@ def aggregate(root: Path) -> dict[str, Any]:
         raise ReleaseEvidenceFailure(
             "release evidence requires a clean committed candidate"
         )
+    corpus_value = os.environ.get(CORPUS_ROOT_ENV)
+    if not corpus_value:
+        raise ReleaseEvidenceFailure(
+            f"{CORPUS_ROOT_ENV} must identify the pinned corpus worktree"
+        )
+    corpus_root = Path(corpus_value).resolve()
     with tempfile.TemporaryDirectory(
         prefix="gitdrift-release-evidence-"
     ) as directory:
-        inputs = _collect_inputs(root, candidate, Path(directory))
-
+        inputs = _collect_inputs(
+            root,
+            candidate,
+            Path(directory),
+            corpus_root,
+        )
     evidence_ids = tuple(item.identity for item in inputs.commands)
     covered_obligations = set(inputs.synthetic.get("obligations", ()))
     covered_obligations.update(INSTALLED_OBLIGATIONS)
+    covered_obligations.update(CORPUS_OBLIGATIONS)
+    for document in (inputs.contract_quality, inputs.resource_bounds):
+        covered_obligations.update(
+            validated_pass_claims(
+                document,
+                "obligations",
+                REQUIRED_OBLIGATIONS,
+            )
+        )
     obligations = coverage_records(
         REQUIRED_OBLIGATIONS,
         covered_obligations,
         evidence_ids,
         "No exact-candidate executable evidence is aggregated yet.",
     )
+    covered_gates = set(AGGREGATED_GATES)
+    for document in (inputs.contract_quality, inputs.resource_bounds):
+        covered_gates.update(
+            validated_pass_claims(document, "gates", REQUIRED_GATES)
+        )
     gates = coverage_records(
         REQUIRED_GATES,
-        set(AGGREGATED_GATES),
+        covered_gates,
         evidence_ids,
         "The required release-wide evidence tier is not aggregated yet.",
     )
@@ -111,6 +199,7 @@ def aggregate(root: Path) -> dict[str, Any]:
         "source_tree_identity": git(root, "rev-parse", "HEAD^{tree}"),
         "commands": [item.to_dict() for item in inputs.commands],
         "generated_artifacts": artifacts if isinstance(artifacts, list) else [],
+        "corpus_evidence": inputs.corpus,
         "gates": gates,
         "obligations": obligations,
         "outcome": "pass" if is_complete(gates, obligations) else "blocked",

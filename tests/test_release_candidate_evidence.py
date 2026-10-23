@@ -14,6 +14,10 @@ class ReleaseAggregationTests(unittest.TestCase):
         specifications = release._command_specs(
             Path("synthetic"),
             Path("installed"),
+            Path("corpus"),
+            Path("contract-quality"),
+            Path("resource-bounds"),
+            Path("corpus-root"),
         )
         self.assertEqual(
             tuple(item.identity for item in specifications),
@@ -21,8 +25,24 @@ class ReleaseAggregationTests(unittest.TestCase):
                 "canonical-validation",
                 "synthetic-state-awareness",
                 "installed-distribution",
+                "contract-quality",
+                "resource-bounds",
+                "dx-artifacts-corpus",
             ),
         )
+
+    def test_corpus_command_is_bound_to_the_immutable_identity(self) -> None:
+        specification = release._command_specs(
+            Path("synthetic"),
+            Path("installed"),
+            Path("corpus"),
+            Path("contract-quality"),
+            Path("resource-bounds"),
+            Path("corpus-root"),
+        )[-1]
+        self.assertIn(release.CORPUS_COMMIT, specification.arguments)
+        self.assertIn(release.CORPUS_TREE, specification.arguments)
+        self.assertIn("corpus-root", specification.arguments)
 
     def test_dirty_candidate_is_rejected_before_commands_run(self) -> None:
         with mock.patch.object(
@@ -35,3 +55,19 @@ class ReleaseAggregationTests(unittest.TestCase):
                 "clean committed candidate",
             ):
                 release.aggregate(ROOT)
+
+    def test_missing_corpus_is_rejected_before_commands_run(self) -> None:
+        with mock.patch.object(
+            release,
+            "git",
+            side_effect=("candidate", ""),
+        ), mock.patch.dict("os.environ", {}, clear=True):
+            with self.assertRaisesRegex(
+                ReleaseEvidenceFailure,
+                release.CORPUS_ROOT_ENV,
+            ):
+                release.aggregate(ROOT)
+
+
+if __name__ == "__main__":
+    unittest.main()

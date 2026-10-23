@@ -7,7 +7,7 @@ from pathlib import Path
 
 from release_evidence_test_support import ACCEPTANCE  # noqa: F401
 from release_evidence_contracts import ReleaseEvidenceFailure
-from release_evidence_documents import load_evidence
+from release_evidence_documents import load_evidence, validated_pass_claims
 
 
 class EvidenceDocumentTests(unittest.TestCase):

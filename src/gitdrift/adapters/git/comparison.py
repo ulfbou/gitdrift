@@ -21,7 +21,11 @@ from gitdrift.ports import (
     StateComparisonResult,
 )
 
-from .repository import GitRepositoryError, GitRepositoryReader
+from .repository import (
+    GIT_COMMAND_TIMEOUT_SECONDS,
+    GitRepositoryError,
+    GitRepositoryReader,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,7 +46,8 @@ class GitStateComparator:
         *arguments: str,
         allowed: tuple[int, ...] = (0,),
     ) -> bytes:
-        result = subprocess.run(
+        try:
+            result = subprocess.run(
             [
                 "git",
                 "-c",
@@ -55,12 +60,17 @@ class GitStateComparator:
                 "core.attributesfile=/dev/null",
                 *arguments,
             ],
-            cwd=self._root,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-        )
+                cwd=self._root,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=GIT_COMMAND_TIMEOUT_SECONDS,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as error:
+            raise GitRepositoryError(
+                "Git comparison exceeded the 30-second execution ceiling"
+            ) from error
         if result.returncode not in allowed:
             detail = result.stderr.decode(
                 "utf-8",
@@ -344,22 +354,28 @@ class GitStateComparator:
         ancestor: str,
         descendant: str,
     ) -> bool:
-        result = subprocess.run(
-            [
-                "git",
-                "-c",
-                "core.hooksPath=/dev/null",
-                "merge-base",
-                "--is-ancestor",
-                ancestor,
-                descendant,
-            ],
-            cwd=self._root,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
-            check=False,
-        )
+        try:
+            result = subprocess.run(
+                [
+                    "git",
+                    "-c",
+                    "core.hooksPath=/dev/null",
+                    "merge-base",
+                    "--is-ancestor",
+                    ancestor,
+                    descendant,
+                ],
+                cwd=self._root,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                timeout=GIT_COMMAND_TIMEOUT_SECONDS,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as error:
+            raise GitRepositoryError(
+                "Git ancestry check exceeded the 30-second execution ceiling"
+            ) from error
         if result.returncode == 0:
             return True
         if result.returncode == 1:

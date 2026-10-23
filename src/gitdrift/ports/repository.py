@@ -76,6 +76,16 @@ class WorkingTreeEntry:
     limitations: tuple[str, ...] = ()
 
 @dataclass(frozen=True, slots=True)
+class ResourceExhaustion:
+    """One deterministic working-tree resource boundary."""
+
+    dimension: str
+    configured_limit: int
+    observed_usage: int
+    omitted_paths: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class WorkingTreeEvidence:
     """A reproducible working-tree capture bound to an index manifest."""
 
@@ -89,6 +99,9 @@ class WorkingTreeEvidence:
     selected_paths: tuple[str, ...]
     entries: tuple[WorkingTreeEntry, ...]
     manifest_identity: str
+    file_count: int
+    input_bytes: int
+    resource_exhaustion: ResourceExhaustion | None = None
     limitations: tuple[str, ...] = ()
 
 class RepositoryReader(Protocol):
@@ -109,5 +122,7 @@ class RepositoryReader(Protocol):
         untracked_policy: UntrackedPolicy = UntrackedPolicy.EXCLUDE,
         ignored_policy: IgnoredPolicy = IgnoredPolicy.EXCLUDE,
         selected_paths: tuple[str, ...] = (),
+        max_files: int | None = None,
+        max_input_bytes: int | None = None,
     ) -> WorkingTreeEvidence:
         """Capture a stable working-tree manifest without repository mutation."""

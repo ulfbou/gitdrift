@@ -403,7 +403,7 @@ def gate_run_command(
                 "--tmpfs",
                 "/tmp:rw,noexec,nosuid,size=128m",
                 "--tmpfs",
-                "/workspace:rw,nosuid,size=1g",
+                "/workspace:rw,nosuid,size=1g,uid=10001,gid=10001,mode=0755",
             )
         )
     else:

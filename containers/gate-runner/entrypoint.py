@@ -50,11 +50,29 @@ def load_manifest(path: pathlib.Path) -> dict[str, tuple[str, ...]]:
     return result
 
 
-def run(command: Sequence[str], *, cwd: pathlib.Path | None = None, check: bool = True) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        tuple(command), cwd=cwd, check=check,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+def run(
+    command: Sequence[str],
+    *,
+    cwd: pathlib.Path | None = None,
+    check: bool = True,
+) -> subprocess.CompletedProcess[str]:
+    completed = subprocess.run(
+        tuple(command),
+        cwd=cwd,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
     )
+    if check and completed.returncode != 0:
+        command_text = " ".join(command)
+        stderr = completed.stderr.strip() or "<empty>"
+        stdout = completed.stdout.strip() or "<empty>"
+        raise RuntimeError(
+            f"command failed with exit code {completed.returncode}: "
+            f"{command_text}\nstdout:\n{stdout}\nstderr:\n{stderr}"
+        )
+    return completed
 
 
 def git(root: pathlib.Path, *arguments: str) -> str:
